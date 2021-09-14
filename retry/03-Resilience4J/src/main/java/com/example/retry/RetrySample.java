@@ -20,18 +20,16 @@ import io.github.resilience4j.retry.RetryRegistry;
 /**
  * 
  */
-public class RetrySample1 {
+public class RetrySample {
 
-    private static Logger logger = LoggerFactory.getLogger(RetrySample1.class);
+    private static Logger logger = LoggerFactory.getLogger(RetrySample.class);
 
-    private static int MAX_ATTEMPT_COUNT = 4;
+    private static int MAX_ATTEMPT_COUNT = 4; // リトライ回数は3となる
     private static int RETRY_INTERVAL = 3;
 
     public boolean run(URI uri) {
 
-        IntervalFunction backoff = IntervalFunction
-            .ofExponentialBackoff(Duration.ofSeconds(RETRY_INTERVAL), 2d);
-
+        // リトライの構成を設定する
         RetryConfig config = RetryConfig.custom()
             .maxAttempts(MAX_ATTEMPT_COUNT)
             .retryOnResult(response -> ((HttpResponse<?>) response).statusCode() == 500)
@@ -49,12 +47,21 @@ public class RetrySample1 {
             .GET()
             .build();
 
+        // Retry インスタンスを取得
         RetryRegistry registry = RetryRegistry.of(config);
         Retry retry = registry.retry("retry");
 
+        // イベントをハンドルする
+        retry.getEventPublisher()
+            .onRetry(event -> logger.info("onRetry : {}", event.toString()))
+            .onError(event -> logger.info("onError : {}", event.toString()))
+            .onSuccess(event -> logger.info("onSuccess : {}", event.toString()));
+
         try {
+            // Retry#executeCallable のコールバックとしてリトライすべき処理を記述する
             HttpResponse<String> response = retry.executeCallable(new Callable<HttpResponse<String>>() {
                 public java.net.http.HttpResponse<String> call() throws Exception {
+                    logger.info("Executing request : {} " ,request.uri());
                     HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
                     return response;
                 }
