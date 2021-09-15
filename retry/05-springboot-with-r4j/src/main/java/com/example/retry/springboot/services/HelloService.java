@@ -22,7 +22,7 @@ public class HelloService {
         this.registry = registry;
     }
 
-    @Retry(name = "helloService")
+    @Retry(name = "helloService", fallbackMethod = "fallBackMethod")
     public String sayHello(String name) throws IOException {
         logger.info("sayHello");
         someFunction();
@@ -34,6 +34,11 @@ public class HelloService {
         if (r < 1.0) {
             throw new IOException("IO Error");
         }
+    }
+
+    private String fallBackMethod(String name, Exception e) {
+        logger.info("fallback : {}, {}", name, e.getMessage());
+        return "fallback";
     }
 
     @PostConstruct
