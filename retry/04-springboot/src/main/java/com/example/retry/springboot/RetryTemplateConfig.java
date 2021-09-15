@@ -19,7 +19,7 @@ public class RetryTemplateConfig {
         RetryTemplate retryTemplate = new RetryTemplate();
 
         ExponentialBackOffPolicy exponentialBackkOffPolicy = new ExponentialBackOffPolicy();
-        exponentialBackkOffPolicy.setInitialInterval(1000L);
+        exponentialBackkOffPolicy.setInitialInterval(2000L);
         exponentialBackkOffPolicy.setMultiplier(2.0);
         retryTemplate.setBackOffPolicy(exponentialBackkOffPolicy);
 
