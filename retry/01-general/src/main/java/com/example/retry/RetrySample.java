@@ -12,9 +12,9 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RetrySample1 {
+public class RetrySample {
 
-    private static Logger logger = LoggerFactory.getLogger(RetrySample1.class);
+    private static Logger logger = LoggerFactory.getLogger(RetrySample.class);
 
     private static int MAX_RETRY_COUNT = 3;
     private static int RETRY_INTERVAL = 3;

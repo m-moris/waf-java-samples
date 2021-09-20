@@ -18,7 +18,7 @@ public class HelloServiceWithRecover {
     // ２秒毎の等間隔リトライ
     @Retryable(
         value = { IOException.class }, 
-        maxAttempts = 5, 
+        maxAttempts = 3, 
         backoff = @Backoff(delay = 2000))
     public String sayHello(String name) throws IOException {
         logger.info("sayHello");

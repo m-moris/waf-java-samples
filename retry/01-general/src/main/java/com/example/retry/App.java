@@ -14,16 +14,16 @@ public class App {
         logger.info("main start");
         
         // 成功
-        new RetrySample1().run(URI.create("https://httpbin.org/status/200"));
+        new RetrySample().run(URI.create("https://httpbin.org/status/200"));
         
         // 500 失敗
-        new RetrySample1().run(URI.create("https://httpbin.org/status/500"));
+        new RetrySample().run(URI.create("https://httpbin.org/status/500"));
         
         // 429 失敗
-        new RetrySample1().run(URI.create("https://httpbin.org/status/429"));
+        new RetrySample().run(URI.create("https://httpbin.org/status/429"));
         
         // 強制的にタイムアウトになるように調整
-        new RetrySample1().run(URI.create("https://httpbin.org/delay/10"));
+        new RetrySample().run(URI.create("https://httpbin.org/delay/10"));
 
         logger.info("main end");
     }

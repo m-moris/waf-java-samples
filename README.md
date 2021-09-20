@@ -6,7 +6,7 @@ Microsoft Azure Well-Architected Framework に基づいたクラウドデザイ�
 
 | フォルダ   | サンプル内容 |
 |---|---|
-| retry | リトライ（再試行）パターン |
+| [retry](./retry/) | リトライ（再試行）パターン |
 | circutbreaker |  サーキットブレーカー パターン|
 | healthendpoint |  正常性エンドポイントの監視パターン |
 | queue | キュー ベースの負荷平準化パターン |

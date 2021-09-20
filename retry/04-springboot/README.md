@@ -1,9 +1,14 @@
 # Spring Boot + Spring Retry のリトライサンプル
 
+## 概要
+
+Spring Boot と Spring Retry を酌み交わせてリトライサンプルです。
 
 ## 前提
 
+- Java 11 
 - HTTP エンドポイントを呼び出すために、`curl` を利用します。
+
 ## ビルド
 
 以下のコマンドでビルド、パッケージ化します。
@@ -21,6 +26,8 @@ mvn spring-boot:run
 ```
 
 以下のようなログが表示され、アプリケーションが起動します。
+
+
 
 ```log
   .   ____          _            __ _ _
@@ -100,7 +107,16 @@ curl http://localhost:8080/hello1?name=spring-boot
 ```sh
 curl http://localhost:8080/hello2?name=spring-boot
 ```
-リトライ間隔はアノテーションで指定されたとおり、最大試行回数3回、2秒ごとの等間隔にリトライが実施されます。また、最後まで失敗した場合、`@Recover` アノテーションが指定されているメソッドが呼び出されます。
+リトライ間隔はアノテーションで指定されたとおり、最大試行回数3回、2秒ごとの等間隔にリトライが実施されます。
+
+```java
+    @Retryable(
+        value = { IOException.class }, 
+        maxAttempts = 3, 
+        backoff = @Backoff(delay = 2000))
+```
+
+ログの実行時間を確認すると2秒ごとに実行されていることが分ります。また最後まで失敗した場合、`@Recover` アノテーションが指定されているメソッドが呼び出されます。
 
 ```log
 2021-09-15 20:48:39.212  INFO 1393 --- [nio-8080-exec-8] c.e.r.s.s.HelloServiceWithRecover        : sayHello
