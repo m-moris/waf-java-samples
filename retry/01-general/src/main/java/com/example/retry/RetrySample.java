@@ -16,8 +16,8 @@ public class RetrySample {
 
     private static Logger logger = LoggerFactory.getLogger(RetrySample.class);
 
-    private static int MAX_RETRY_COUNT = 3;
-    private static int RETRY_INTERVAL = 3;
+    private static final int MAX_RETRY_COUNT = 3;
+    private static final int RETRY_INTERVAL = 3;
 
     public boolean run(URI uri) {
 
