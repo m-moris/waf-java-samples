@@ -31,7 +31,9 @@ mvn exec:java
 3. 外部サービスが429を返すパターン。上記と同様です。
 4. 外部サービスが既定時間ないにレスポンスを返さないため、`HttpTimeoutException`がスローされる例。リトライ対象の例外であるため、リトライを試行します。
 
-## 結果
+### 結果
+
+実行結果をパターン別にまとめます。
 
 外部サービスが200を返すパターン
 
@@ -98,7 +100,7 @@ mvn exec:java
 2021-09-21 20:15:23:448 INFO com.example.retry.App - main end
 ```
 
-## 確認ポイント
+### サンプル説明詳細
 
 リトライ回数は定数として宣言されています。変更するとリトライ回数が変化します。
 
@@ -106,7 +108,31 @@ mvn exec:java
     private static final int MAX_RETRY_COUNT = 3;
 ```
 
-本サンプルではリトライ間隔は一定です。`retryCount * RETRY_INTERVAL` に変更すると、段階的に間隔が延びていきます。
+ステータスコードによるリトライの判定。 200番台は成功、500、503、429 はリトライ対象、それ以外は失敗と判定します。
+
+```java
+                if (code >= 200 && code <= 299) {
+                    return true;
+                }
+                // リトライすべきステータスコードかチェック
+                if ((code == 500 || code == 503 || code == 429) == false) {
+                    return false;
+                }
+```
+
+リトライする例外の判定。`HttpTimeoutException` をリトライ対象にしています。それ以外は失敗と判定します。
+
+```java
+            } catch (HttpTimeoutException e) {
+                // タイムアウトの例外はリトライ対象
+                logger.warn("HttpTimeoutException");
+            } catch (IOException | InterruptedException e) {
+                // それ以外の例外は失敗
+                logger.error("Exception", e);
+                return false;
+            }
+```
+リトライ間隔は一定です。`retryCount * RETRY_INTERVAL` に変更すると、段階的に間隔が延びていきます。
 
 ```java
     private static final int RETRY_INTERVAL  = 3;

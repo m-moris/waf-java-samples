@@ -7,9 +7,9 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>2.5.4</version>
-        <relativePath /> <!-- lookup parent from repository -->
+        <relativePath />
     </parent>
-    <groupId>com.example.retry</groupId>
+    <groupId>org.pnop.sample.waf.retry</groupId>
     <artifactId>springboot-with-r4j</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>springboot-with-r4j</name>
