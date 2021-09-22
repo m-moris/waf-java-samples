@@ -2,7 +2,7 @@
 
 ## 概要
 
-Spring Boot と Spring Retry を酌み交わせてリトライサンプルです。
+Spring Boot と Spring Retry を組み合わせたリトライサンプルです。
 
 ## 前提
 
@@ -11,10 +11,25 @@ Spring Boot と Spring Retry を酌み交わせてリトライサンプルです
 
 ## ビルド
 
-以下のコマンドでビルド、パッケージ化します。
+以下のコマンドでビルドします。
 
 ```
 mvn clean package 
+```
+
+## 依存ライブラリ
+
+`spring-boot-starter-web`以外に、以下のライブラリが必要です。
+
+```xml
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.retry</groupId>
+            <artifactId>spring-retry</artifactId>
+        </dependency>
 ```
 
 ## Spring Boot アプケーションの起動

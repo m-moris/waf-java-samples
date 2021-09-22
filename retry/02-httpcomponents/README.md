@@ -8,13 +8,15 @@ Apache HttpComponets を利用したリトライサンプルです。
 
 ## ビルド
 
+以下のコマンドでビルドします。
+
 ```sh
-mvn pakcage
+mvn clean pakcage
 ```
 
 ## 実行
 
-以下のコマンドで実行でききます。
+以下のコマンドで実行します。
 
 ```sh
 mvn exec:java 
