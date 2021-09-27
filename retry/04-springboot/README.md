@@ -1,25 +1,20 @@
 # Spring Boot + Spring Retry のリトライサンプル
 
-## 概要
-
 Spring Boot と Spring Retry を組み合わせたリトライサンプルです。
 
-## 前提
+## 概要
 
-- Java 11 
+Spring Boot と Spring Retry を組み合わせたリトライサンプルです。リトライアノテーションで宣言的に利用する方法と、`RetryTemplate` を利用しプログラムから操作する2種類のサンプルを紹介します。
+
+## 前提条件
+
+- Java 11 以降
+- Maven 3.6 以降
 - HTTP エンドポイントを呼び出すために、`curl` を利用します。
-
-## ビルド
-
-以下のコマンドでビルドします。
-
-```
-mvn clean package 
-```
 
 ## 依存ライブラリ
 
-`spring-boot-starter-web`以外に、以下のライブラリが必要です。
+`spring-boot-starter-web` 以外に、以下のライブラリが必要です。
 
 ```xml
         <dependency>
@@ -32,17 +27,20 @@ mvn clean package
         </dependency>
 ```
 
-## Spring Boot アプケーションの起動
+## ビルドおよび実行方法
 
-以下のコマンドでアプリケーションを起動します。 
+以下のコマンドでビルドします。
+
+```
+mvn clean package 
+```
+以下のコマンドでSpring Boot アプリケーションを起動します。 
 
 ```
 mvn spring-boot:run
 ```
 
 以下のようなログが表示され、アプリケーションが起動します。
-
-
 
 ```log
   .   ____          _            __ _ _
@@ -70,9 +68,9 @@ mvn spring-boot:run
 mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=8888
 ```
 
-## 実行
+## アプリケーションへの操作
 
-エンドポイントを呼び出つつ、アプリケーションのログを見て、リトライの挙動を確認します。
+エンドポイントを呼び出つつ、アプリケーションログを見てリトライの挙動を確認します。
 
 ### 単純なリトライ
 
@@ -84,7 +82,7 @@ curl http://localhost:8080/hello1?name=spring-boot
 
 アノテーションの指示は、以下の通りです。
 - 最大試行回数4回（リトライ回数3回）
-- IOException をリトライ対象
+- `IOException` をリトライ対象
 - リトライ間隔 3秒 × 2^（リトライ回数）
 
 ```java
@@ -163,5 +161,32 @@ curl http://localhost:8080/hello3?name=spring-boot
 2021-09-15 20:53:49.869  INFO 1504 --- [nio-8080-exec-1] .RetryTemplateConfig$CustomRetryListener : onError, retry count : 3
 2021-09-15 20:53:49.869  INFO 1504 --- [nio-8080-exec-1] .RetryTemplateConfig$CustomRetryListener : close
 ```
+
+## リトライ構成の外部化について
+
+サンプル説明では、リトライに関連するパラメータをハードコーディングしてありますが、プロダクションコードではこのような実装は避けてください。
+
+`HelloService` には使用されていませんが、外部からパラメータを与えるサンプルが実装されています。
+
+以下の例では外部に設定されたプロパティ（例えば、`application.yml` 、環境変数など） から値を参照します。本サンプルでは `resoueces/applicaiton.yml` に定義してありますが、これもロケーションの変更は可能です。様々な設定方法があるため詳細はリファレンスを参照してください。
+
+```java
+    @Retryable(
+        value = { IOException.class },  
+        maxAttemptsExpression = "${my.retry.maxAttempts}",
+        backoff = @Backoff(delayExpression = "${my.retry.delay}",
+                           multiplierExpression= "${my.retry.multiplier}"))
+    public String sayHello2(String name) throws IOException {
+        logger.info("sayHello2");
+        someFunction();
+        return String.format("Hello %s !!", name);
+    }
+```
+
+# 参考リンク
+
+[Retry](https://docs.spring.io/spring-batch/docs/current/reference/html/retry.html)
+[Spring Boot Externalized Configuration](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/#features.external-config)
+[spring-projects/spring-retry](https://github.com/spring-projects/spring-retry)
 
 以上

@@ -21,9 +21,6 @@ import org.apache.hc.core5.util.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * 
- */
 public class RetrySample {
 
     private static Logger logger = LoggerFactory.getLogger(RetrySample.class);
@@ -59,16 +56,10 @@ public class RetrySample {
 
         private static int MAX_RETRY_COUNT = 5; // リトライ回数
         private static int RETRY_INTERVAL = 3; // リトライ間隔
-
-        @Override
-        public boolean retryRequest(HttpRequest request, IOException exception, int execCount, HttpContext context) {
-            logger.info("retry with exception");
-            if (execCount <= MAX_RETRY_COUNT) {
-                return exception instanceof SocketTimeoutException;
-            }
-            return false;
-        }
-
+        
+        /**
+         * リトライすべき条件を判定します。
+         */
         @Override
         public boolean retryRequest(HttpResponse response, int execCount, HttpContext context) {
             int code = response.getCode();
@@ -93,9 +84,26 @@ public class RetrySample {
             return false;
         }
 
+        
+        /**
+         * リトライすべき例外を判定します。
+         */
+        @Override
+        public boolean retryRequest(HttpRequest request, IOException exception, int execCount, HttpContext context) {
+            logger.info("retry with exception");
+            if (execCount <= MAX_RETRY_COUNT) {
+                return exception instanceof SocketTimeoutException;
+            }
+            return false;
+        }
+
+        
+        /**
+         * リトライ間隔を計算します。
+         */
         @Override
         public TimeValue getRetryInterval(HttpResponse response, int execCount, HttpContext context) {
-            // 等間隔
+            // 段階的間隔
             return TimeValue.ofSeconds(RETRY_INTERVAL * execCount);
         }
     }

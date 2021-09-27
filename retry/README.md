@@ -18,12 +18,12 @@ Microsoft Azure Well-Architected Framework に基づいたクラウドデザイ�
 
 * [再試行パターン - Cloud Design Patterns | Microsoft Docs](https://docs.microsoft.com/ja-jp/azure/architecture/patterns/retry)
 
-
 * [再試行の一般的なガイダンス - Best practices for cloud applications | Microsoft Docs](https://docs.microsoft.com/ja-jp/azure/architecture/best-practices/transient-faults)
 
 * [Azure サービスの再試行ガイダンス - Best practices for cloud applications | Microsoft Docs](https://docs.microsoft.com/ja-jp/azure/architecture/best-practices/retry-service-specific)
 
 * [再試行ストームのアンチパターン - Performance antipatterns for cloud apps | Microsoft Docs](https://docs.microsoft.com/ja-jp/azure/architecture/antipatterns/retry-storm/)
   
+
 
 

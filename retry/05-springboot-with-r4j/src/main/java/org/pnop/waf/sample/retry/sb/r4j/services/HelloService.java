@@ -31,7 +31,7 @@ public class HelloService {
 
     private static void someFunction() throws IOException {
         double r = Math.random();
-        if (r < 1.0) {
+        if (r < 0.7) {
             throw new IOException("IO Error");
         }
     }

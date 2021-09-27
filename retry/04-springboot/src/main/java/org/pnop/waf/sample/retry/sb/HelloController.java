@@ -31,18 +31,28 @@ public class HelloController {
         _serviceWithRetryTemplate = serviceWithRetryTemplate;
     }
 
+    
+    /**
+     * 通常のリトライ
+     */
     @GetMapping("hello1")
     public String hello1(@RequestParam String name) throws IOException {
         logger.info("hello1");
         return _service.sayHello(name);
     }
 
+    /**
+     * リカバリ付きのリトライ
+     */
     @GetMapping("hello2")
     public String hello2(@RequestParam String name) throws IOException {
         logger.info("hello2");
         return _serviceWithRecover.sayHello(name);
     }
 
+    /**
+     * リトライテンプレートを利用したリトライ
+     */
     @GetMapping("hello3")
     public String hello3(@RequestParam String name) throws IOException {
         logger.info("hello3");

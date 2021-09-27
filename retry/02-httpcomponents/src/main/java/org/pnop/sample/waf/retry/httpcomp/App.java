@@ -13,7 +13,10 @@ public class App {
 
         logger.info("httpcomponets sample start");
 
+        // 正常パターン
         new RetrySample().run(URI.create("https://httpbin.org/status/200"));
+        
+        // 500 を返すパターン
         new RetrySample().run(URI.create("https://httpbin.org/status/500"));
 
         logger.info("end");
