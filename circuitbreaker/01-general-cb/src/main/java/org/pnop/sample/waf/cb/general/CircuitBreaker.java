@@ -6,13 +6,16 @@ import java.time.format.DateTimeFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ */
 public class CircuitBreaker {
 
     private static Logger logger = LoggerFactory.getLogger(CircuitBreaker.class);
 
-    private CircuitBreakerStateStore stateStore;
+    private ICircuitBreakerStore stateStore;
+    private CircuitBreakerStateEnum prevState = CircuitBreakerStateEnum.CLOSED;
 
-    private long openToHalfOpenWaitTimeInSecond;
+    private long openToHalfOpenWaitTime;
 
     private String name;
 
@@ -20,40 +23,60 @@ public class CircuitBreaker {
     private int successThreshold = 1;
 
     /**
+     * @param name                    リソース名
+     * @param failureThreshold        OPENに遷移する失敗回数の閾値
+     * @param halfOpenSuccessThresold HALF OPEN からCLOSED に遷移する成功回数の閾値 
+     * @param openToHalfOpenWaitTime  OPENから HALF OPEN に遷移するタイマー（秒）
      */
     public CircuitBreaker(
         String name,
         int failureThreshold,
-        long openToHalfOpenWaitTimeInSecond) {
+        int halfOpenSuccessThresold,
+        long openToHalfOpenWaitTime) {
+
         this.name = name;
         this.failureThreshold = failureThreshold;
-        this.successThreshold = failureThreshold / 2 + 1;
-
-        this.openToHalfOpenWaitTimeInSecond = openToHalfOpenWaitTimeInSecond;
+        this.successThreshold = halfOpenSuccessThresold;
+        this.openToHalfOpenWaitTime = openToHalfOpenWaitTime;
         this.stateStore = new CircuitBreakerStateStore();
     }
 
-    public <T> void invoke(T arg, Action<T> action) throws Exception {
+    /**
+     * @param <T>
+     * @param arg
+     * @param action
+     * @throws Exception
+     */
+    public <T> void invoke(Action<T> action, T arg) throws Exception {
 
-        // OPEN なら サービスを呼び出さずに復帰する
-        if (isOpen()) {
-            logger.info("Action is not invoked.");
-            whenCircuitIsOpen(arg, action);
-        }
-
-        // HALF_OPTN もしくは CLOSED ならサービス呼び出しを試みる
-        // 実装によっては HALF_OPEN 時に、サービス呼び出しを絞る可能性もある
+        prevState = stateStore.getState();
         try {
-            action.run(arg);
-            transitionToClose();
-        } catch (Exception e) {
-            trackException(e);
-            throw e;
+            if (stateStore.isOpen()) {
+                whenCircuitIsOpen(action, arg);
+                return;
+            }
+
+            // HALF_OPTN もしくは CLOSED ならサービス呼び出しする
+            try {
+                action.run(arg);
+                transitionToClosed();
+            } catch (Exception e) {
+                // 例外が発生したら記録するし、OPEN状態への遷移を試みる
+                trackException(e);
+                transitionToOpen();
+                throw e;
+            }
+        } finally {
+            logger.info("{}", toString());
         }
+
     }
 
     private void trackException(Throwable t) {
         stateStore.setFailure(t);
+    }
+
+    private void transitionToOpen() {
         if (stateStore.isClosed()) {
             if (stateStore.getFailureCount() >= failureThreshold) {
                 stateStore.open();
@@ -63,34 +86,17 @@ public class CircuitBreaker {
         }
     }
 
-    private void transitionToClose() {
-        if(isClosed()) {
-            stateStore.close();
-        }
-        else if (isHalfOpen()) {
+    private void transitionToClosed() {
+        if (stateStore.isHalfOpen()) {
             if (stateStore.successfullHalfOpen() >= this.successThreshold) {
                 stateStore.reset();
-            } else {
-                stateStore.halfOpen();
             }
         }
     }
 
-    private boolean isOpen() {
-        return stateStore.isOpen();
-    }
+    private <T> void whenCircuitIsOpen(Action<T> action, T arg) throws Exception {
 
-    private boolean isClosed() {
-        return stateStore.isClosed();
-    }
-
-    private boolean isHalfOpen() {
-        return !isOpen() && !isClosed();
-    }
-
-    private <T> void whenCircuitIsOpen(T arg, Action<T> action) throws Exception {
-
-        var time = stateStore.getLastStateChangeDate().plusSeconds(openToHalfOpenWaitTimeInSecond);
+        var time = stateStore.getLastStateChangeDate().plusSeconds(openToHalfOpenWaitTime);
 
         // Open のタイムアウト期間が経過したかチェックする
         if (time.isBefore(LocalDateTime.now())) {
@@ -99,33 +105,30 @@ public class CircuitBreaker {
             // 成功したら Open に遷移する
             try {
                 synchronized (this) {
+                    prevState = CircuitBreakerStateEnum.HALF_OPEN;
                     stateStore.halfOpen();
                     action.run(arg);
-                    transitionToClose();
+                    transitionToClosed();
+                    return;
                 }
 
             } catch (Exception e) {
                 trackException(e);
-                throw new CircuitBreakerOpenException(
-                    "The circuit was tripped while half-open. Refer to the inner exception for the cause of the trip.",
-                    e);
+                transitionToOpen();
+                throw new CircuitBreakerOpenException("HALF OPEN 状態で呼び出しが失敗したので、再度OPEN状態へ遷移します。", e);
             }
-        } else {
-            stateStore.open(); // tracking status
         }
 
-        throw new CircuitBreakerOpenException(
-            "The circuit is still open. Refer to the inner exception for the cause of the circuit trip.",
-            this.stateStore.getLastException());
+        throw new CircuitBreakerOpenException("タイムアウト期間が経過していないので、依然 OPEN 状態です", this.stateStore.getLastException());
     }
 
-    DateTimeFormatter f = DateTimeFormatter.ofPattern("HH:MM:SS");
+    DateTimeFormatter f = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
 
     @Override
     public String toString() {
         return String.format("name = %s, state = %s -> %s, last exception = %s, failure count = %s , last changed = %s",
             name,
-            stateStore.getPrevState(),
+            prevState,
             stateStore.getState(),
             stateStore.getLastException(),
             stateStore.getFailureCount(),
