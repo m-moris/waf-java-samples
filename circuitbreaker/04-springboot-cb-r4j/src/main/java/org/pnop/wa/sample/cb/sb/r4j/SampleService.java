@@ -38,16 +38,11 @@ public class SampleService {
         });
     }
 
-    public String fallback(Exception e) {
-        logger.info("fallback");
-        return "fallback";
-    }
-
     @CircuitBreaker(name = "myconfig2", fallbackMethod = "fallback2")
     public String call2(int code) {
         String url = "http://httpbin.org/status/" + code;
         logger.info("request : {}", url);
-        restTemplate.getForObject(url, String.class); // throw RuntimeException
+        restTemplate.getForObject(url, String.class);
         logger.info("success");
         return "success";
     }

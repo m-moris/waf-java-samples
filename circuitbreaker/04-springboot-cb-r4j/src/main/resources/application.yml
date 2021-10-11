@@ -9,4 +9,4 @@ resilience4j.circuitbreaker:
             automatic-transition-from-open-to-half-open-enabled: true
             record-exceptions:
             - org.springframework.web.client.HttpServerErrorException
-            - org.springframework.web.client.HttpClientErrorException$TooManyRequests
+            - org.springframework.web.client.HttpClientErrorException.TooManyRequests

@@ -1,6 +1,5 @@
 package org.pnop.wa.sample.cb.sb.r4j;
 
-import java.io.IOException;
 import java.time.Duration;
 
 import org.slf4j.Logger;
@@ -9,6 +8,8 @@ import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JCircuit
 import org.springframework.cloud.client.circuitbreaker.Customizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType;
@@ -20,7 +21,6 @@ public class SampleConfiguration {
 
     @Bean
     public Customizer<Resilience4JCircuitBreakerFactory> defaultCustomizer() {
-
         logger.info("defaultCustomizer");
 
         CircuitBreakerConfig config = CircuitBreakerConfig.custom()
@@ -28,7 +28,8 @@ public class SampleConfiguration {
             .slidingWindowSize(10)
             .failureRateThreshold(30)
             .permittedNumberOfCallsInHalfOpenState(5)
-            .recordExceptions(IOException.class, RuntimeException.class)
+            .recordExceptions(HttpServerErrorException.class, 
+                HttpClientErrorException.TooManyRequests.class)
             .automaticTransitionFromOpenToHalfOpenEnabled(true)
             .waitDurationInOpenState(Duration.ofSeconds(5))
             .build();

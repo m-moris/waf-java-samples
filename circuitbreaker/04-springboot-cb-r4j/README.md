@@ -68,6 +68,56 @@ mvn spring-boot:run
 mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=8888
 ```
 
+## サンプルの説明
+
+`/test1` と `/test2` のエンドポイントが定義しており、実装方法は異なりました同じ振る舞いをします。`/test1` では、プログラムによってサーキットブレーカーを構成した例、`/test2` は `@CircutBreaker` アノテーションで構成されています。
+
+
+
+
+`/test1` のエンドポンイトから呼び出されるサービスは、プログラムでサーキットブレーカーを構成した例です。 `SampleConfiguration` で定義されています。
+
+```java
+    @Bean
+    public Customizer<Resilience4JCircuitBreakerFactory> defaultCustomizer() {
+
+CircuitBreakerConfig config = CircuitBreakerConfig.custom()
+            .slidingWindowType(SlidingWindowType.COUNT_BASED)
+            .slidingWindowSize(10)
+            .failureRateThreshold(30)
+            .permittedNumberOfCallsInHalfOpenState(5)
+            .recordExceptions(HttpServerErrorException.class, 
+                HttpClientErrorException.TooManyRequests.class)
+            .automaticTransitionFromOpenToHalfOpenEnabled(true)
+            .waitDurationInOpenState(Duration.ofSeconds(5))
+            .build();
+
+        return factory -> factory
+            .configure(builder -> builder
+                .circuitBreakerConfig(config).build(), "myconfig1");
+    }
+```
+
+`/test2` のエンドポイントから呼び出されるサービスは、`@CircuitBreaker` アノテーションで構成されています。構成値は、`application.yml` で定義されています。
+
+```yml
+resilience4j.circuitbreaker:
+    instances:
+        myconfig2:
+            slidingWindowSize: 10
+            permittedNumberOfCallsInHalfOpenState: 5
+            waitDurationInOpenState: 5000
+            failureRateThreshold: 30
+            registerHealthIndicator: true
+            automatic-transition-from-open-to-half-open-enabled: true
+            record-exceptions:
+            - org.springframework.web.client.HttpServerErrorException
+            - org.springframework.web.client.HttpClientErrorException.TooManyRequests
+
+```
+
+`/test1` も `/test2` もほぼ同じ振る舞いになるように、構成設定してあします。
+
 ## アプリケーションへの操作
 
 `test.sh` を実行します。 
@@ -177,50 +227,7 @@ mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=8888
 
 本サンプルでは、内部の状態を確認できないので、挙動から判断しています。
 
-## サンプルの補足説明
 
-
-`/test1` のエンドポンイトから呼び出されるサービスは、プログラムでサーキットブレーカーを構成した例です。 `SampleConfiguration` で定義されています。
-
-```java
-    @Bean
-    public Customizer<Resilience4JCircuitBreakerFactory> defaultCustomizer() {
-
-CircuitBreakerConfig config = CircuitBreakerConfig.custom()
-            .slidingWindowType(SlidingWindowType.COUNT_BASED)
-            .slidingWindowSize(10)
-            .failureRateThreshold(30)
-            .permittedNumberOfCallsInHalfOpenState(5)
-            .recordExceptions(IOException.class, RuntimeException.class)
-            .automaticTransitionFromOpenToHalfOpenEnabled(true)
-            .waitDurationInOpenState(Duration.ofSeconds(5))
-            .build();
-
-        return factory -> factory
-            .configure(builder -> builder
-                .circuitBreakerConfig(config).build(), "myconfig1");
-    }
-```
-
-`/test2` のエンドポイントから呼び出されるサービスは、`@CircuitBreaker` アノテーションで構成されています。構成値は、`application.yml` で定義されています。
-
-```yml
-resilience4j.circuitbreaker:
-    instances:
-        myconfig2:
-            slidingWindowSize: 10
-            permittedNumberOfCallsInHalfOpenState: 5
-            waitDurationInOpenState: 5000
-            failureRateThreshold: 30
-            registerHealthIndicator: true
-            automatic-transition-from-open-to-half-open-enabled: true
-            record-exceptions:
-            - org.springframework.web.client.HttpServerErrorException
-            - org.springframework.web.client.HttpClientErrorException$TooManyRequests
-
-```
-
-同じ振る舞いになるように、構成設定してあします。
 
 ## 参考リンク
 
