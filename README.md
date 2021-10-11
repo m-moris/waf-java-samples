@@ -39,3 +39,11 @@ Docker Image が公開されていますので、ローカルにテストで利�
 - Apache Maven 3.8.1
 - Eclipse IDE for Java Developers (2021-3)
 - Visual Studio Code 1.60.0 
+
+
+## 免責
+
+## ライセンス
+
+TODO
+

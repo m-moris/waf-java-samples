@@ -111,7 +111,6 @@ public class CircuitBreaker {
                     transitionToClosed();
                     return;
                 }
-
             } catch (Exception e) {
                 trackException(e);
                 transitionToOpen();

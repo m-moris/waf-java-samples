@@ -21,7 +21,7 @@ Resilience4j を利用したリトライサンプルです。
 
 ## 依存ライブラリ
 
-Resilience4j の リトライ ライブラリを利用しています。
+Resilience4j の リトライライブラリを利用しています。
 
 ```xml
         <dependency>

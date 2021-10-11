@@ -26,7 +26,7 @@ public class CircuitBreakerSample {
             .slidingWindowType(SlidingWindowType.COUNT_BASED)
             .slidingWindowSize(10)
             .failureRateThreshold(30)
-            .permittedNumberOfCallsInHalfOpenState(10)
+            .permittedNumberOfCallsInHalfOpenState(5)
             .recordExceptions(IOException.class, RuntimeException.class)
             .automaticTransitionFromOpenToHalfOpenEnabled(true)
             .waitDurationInOpenState(Duration.ofSeconds(5))
@@ -44,7 +44,7 @@ public class CircuitBreakerSample {
                 @Override
                 public String apply(Boolean isThrow) {
                     if (isThrow) {
-                        throw new RuntimeException();
+                        throw new RuntimeException("呼び出し失敗");
                     } else {
                         return "呼び出し成功";
                     }
@@ -84,9 +84,13 @@ public class CircuitBreakerSample {
         Try<String> result = Try.of(() -> decorated.apply(arg));
         State after = circutBreaker.getState();
 
-        logger.info("state = {} -> {}, success = {}, result = {}",
-            before, after, result.isSuccess(), result.getOrNull());
-
+        if (result.isSuccess()) {
+            logger.info("state = {} -> {}, success = {}, result = {}",
+                before, after, result.isSuccess(), result.getOrNull());
+        } else {
+            logger.info("state = {} -> {}, success = {}, cause = {}",
+                before, after, result.isSuccess(), result.getCause().getMessage());
+        }
     }
 
     private static void sleep(Duration d) {
