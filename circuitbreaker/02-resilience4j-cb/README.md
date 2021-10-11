@@ -151,9 +151,6 @@ Visaul Studio Code や Eclipse などの IDE 上からもビルド、実行で�
 ```
 ## 参考リンク
 
-* [サーキット ブレーカー パターン - Cloud Design Patterns | Microsoft Docs](https://docs.microsoft.com/ja-jp/azure/architecture/patterns/circuit-breaker)
-* [サーキット ブレーカー パターンの実装 | Microsoft Docs](https://docs.microsoft.com/ja-jp/dotnet/architecture/microservices/implement-resilient-applications/implement-circuit-breaker-pattern)
 * [CircuitBreaker](https://resilience4j.readme.io/docs/circuitbreaker)
-* [Spring Cloud Circuit Breaker とは？ - リファレンスドキュメント](https://spring.pleiades.io/projects/spring-cloud-circuitbreaker)
 
 以上

@@ -14,7 +14,7 @@ Spring Boot と Spring Retry を組み合わせたリトライサンプルです
 
 ## 依存ライブラリ
 
-`spring-boot-starter-web` 以外に、以下のライブラリが必要です。
+`spring-boot-starter-web` 以外に、以下のライブラリが必要です。詳細は、`pom.xml` を参照してください。
 
 ```xml
         <dependency>
