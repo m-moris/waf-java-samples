@@ -22,6 +22,8 @@ public class SampleConfiguration {
     @Bean
     public Customizer<SpringRetryCircuitBreakerFactory> defaultCustomizer() {
 
+        logger.info("defaultCustomizer");
+
         Map<Class<? extends Throwable>, Boolean> retryableExceptions = new HashMap<>();
         retryableExceptions.put(HttpServerErrorException.class, true);
         RetryPolicy retryPolicy = new SimpleRetryPolicy(3, retryableExceptions);

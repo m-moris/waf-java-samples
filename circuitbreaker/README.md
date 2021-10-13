@@ -10,8 +10,8 @@ Microsoft Azure Well-Architected Framework に基づいたクラウドデザイ�
 |---|---|
 | [01-general-b](./01-general-cb/README.md)| プレーンJavaでの実装サンプル  |
 | [02-rejilience4j](./02-resilience4j-cb/README.md)| Resilience4J Retry を利用したサーキットブレーカーサンプル |
-| [03-Resilience4j](./03-springboot-cb/README.md) | | Spring Boot + Spring Cloud Circuit Breaker + Spring Retry を利用したサンプル
-| [04-springboot](./04-springboot-cb-r4j/README.md) | Spring Boot + Spring Cloud Circuit Breaker + Ressilience4j  を利用したサンプル
+| [03-springboot-cb](./03-springboot-cb/README.md)         | Spring Boot + Spring Cloud Circuit Breaker + Spring Retry を利用したサンプル |
+| [04-springboot-cb-r4j](./04-springboot-cb-r4j/README.md) | Spring Boot + Spring Cloud Circuit Breaker + Ressilience4j  を利用したサンプル |
 
 ## 参考リンク
 

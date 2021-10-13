@@ -6,8 +6,6 @@ Spring Boot と Spring Cloud Circuit Breaker の Rejilience4j を組み合わせ
 
 Spring Cloud Circuit Breaker によって提供されたサーキットブレーカー機能を利用します。いくつか実装を選択することができますが、本サンプルでは Rejilience4j を利用します。
 
-## 前提
-
 ## 前提条件
 
 - Java 11 以降
@@ -73,15 +71,12 @@ mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=8888
 `/test1` と `/test2` のエンドポイントが定義しており、実装方法は異なりました同じ振る舞いをします。`/test1` では、プログラムによってサーキットブレーカーを構成した例、`/test2` は `@CircutBreaker` アノテーションで構成されています。
 
 
-
-
 `/test1` のエンドポンイトから呼び出されるサービスは、プログラムでサーキットブレーカーを構成した例です。 `SampleConfiguration` で定義されています。
 
 ```java
     @Bean
     public Customizer<Resilience4JCircuitBreakerFactory> defaultCustomizer() {
-
-CircuitBreakerConfig config = CircuitBreakerConfig.custom()
+        CircuitBreakerConfig config = CircuitBreakerConfig.custom()
             .slidingWindowType(SlidingWindowType.COUNT_BASED)
             .slidingWindowSize(10)
             .failureRateThreshold(30)

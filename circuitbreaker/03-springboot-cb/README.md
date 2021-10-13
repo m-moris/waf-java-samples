@@ -75,59 +75,214 @@ mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=8888
 ```java
     @Bean
     public Customizer<SpringRetryCircuitBreakerFactory> defaultCustomizer() {
+
         logger.info("defaultCustomizer");
-        var p = new CircuitBreakerRetryPolicy(new SimpleRetryPolicy(2));
-        p.setOpenTimeout(5000);
-        p.setResetTimeout(10000);
+
+        Map<Class<? extends Throwable>, Boolean> retryableExceptions = new HashMap<>();
+        retryableExceptions.put(HttpServerErrorException.class, true);
+        RetryPolicy retryPolicy = new SimpleRetryPolicy(3, retryableExceptions);
+        CircuitBreakerRetryPolicy policy = new CircuitBreakerRetryPolicy(retryPolicy);
+        policy.setOpenTimeout(5000);
+        policy.setResetTimeout(10000);
 
         return factory -> factory
-            .configure(builder -> builder.retryPolicy(p).build(), "myconfig1");
+            .configure(builder -> builder.retryPolicy(policy).build(), "myconfig1");
     }
 ```
 
-##
+## アプリケーションへの操作
 
+`test.sh` を実行します。アプリケーションの動作を分りやすくするために、`org.springframework.retry` のデバッグレベルを `TRACE`にしてあります。
 
+初期状態（CLOSED）-> OPEN へ遷移する例です。設定通り5秒以内に3回以上失敗すると、 OPEN への遷移します。3回目の呼び出しログで、最終的に `Opening circuit` と出力されるのが確認できます。それ移行の呼び出しは、サーキットブレーカーによってブロックされます。
 
 ```log
-2021-10-11 16:47:51.152  INFO 9499 --- [nio-8080-exec-1] o.p.sample.waf.cb.sb.SampleController    : test2
-2021-10-11 16:47:51.186 DEBUG 9499 --- [nio-8080-exec-1] s.r.i.StatefulRetryOperationsInterceptor : Executing proxied method in stateful retry: public java.lang.String org.pnop.sample.waf.cb.sb.SampleService.call2(int)(64e2a18e)
-2021-10-11 16:47:51.208 TRACE 9499 --- [nio-8080-exec-1] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=0, lastException=null, exhausted=false]
-2021-10-11 16:47:51.208 TRACE 9499 --- [nio-8080-exec-1] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
-2021-10-11 16:47:51.208 DEBUG 9499 --- [nio-8080-exec-1] o.s.retry.support.RetryTemplate          : Retry: count=0
-2021-10-11 16:47:51.221  INFO 9499 --- [nio-8080-exec-1] org.pnop.sample.waf.cb.sb.SampleService  : request : http://httpbin.org/status/500
-2021-10-11 16:47:51.858 TRACE 9499 --- [nio-8080-exec-1] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
-2021-10-11 16:47:51.858 DEBUG 9499 --- [nio-8080-exec-1] o.s.retry.support.RetryTemplate          : Checking for rethrow: count=1
-2021-10-11 16:47:51.858 ERROR 9499 --- [nio-8080-exec-1] org.pnop.sample.waf.cb.sb.SampleService  : Fallback for call invoked
-2021-10-11 16:47:51.858 DEBUG 9499 --- [nio-8080-exec-1] s.r.i.StatefulRetryOperationsInterceptor : Exiting proxied method in stateful retry with result: (fallback)
-2021-10-11 16:47:51.931  INFO 9499 --- [nio-8080-exec-2] o.p.sample.waf.cb.sb.SampleController    : test2
-2021-10-11 16:47:51.931 DEBUG 9499 --- [nio-8080-exec-2] s.r.i.StatefulRetryOperationsInterceptor : Executing proxied method in stateful retry: public java.lang.String org.pnop.sample.waf.cb.sb.SampleService.call2(int)(10ab570)
-2021-10-11 16:47:51.933 TRACE 9499 --- [nio-8080-exec-2] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=1, lastException=org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 INTERNAL SERVER ERROR: [no body], exhausted=false]
-2021-10-11 16:47:51.933 TRACE 9499 --- [nio-8080-exec-2] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
-2021-10-11 16:47:51.933 DEBUG 9499 --- [nio-8080-exec-2] o.s.retry.support.RetryTemplate          : Retry: count=1
-2021-10-11 16:47:51.933  INFO 9499 --- [nio-8080-exec-2] org.pnop.sample.waf.cb.sb.SampleService  : request : http://httpbin.org/status/500
-2021-10-11 16:47:52.145 TRACE 9499 --- [nio-8080-exec-2] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
-2021-10-11 16:47:52.146 DEBUG 9499 --- [nio-8080-exec-2] o.s.retry.support.RetryTemplate          : Checking for rethrow: count=2
-2021-10-11 16:47:52.147 ERROR 9499 --- [nio-8080-exec-2] org.pnop.sample.waf.cb.sb.SampleService  : Fallback for call invoked
-2021-10-11 16:47:52.147 DEBUG 9499 --- [nio-8080-exec-2] s.r.i.StatefulRetryOperationsInterceptor : Exiting proxied method in stateful retry with result: (fallback)
-2021-10-11 16:47:52.158  INFO 9499 --- [nio-8080-exec-3] o.p.sample.waf.cb.sb.SampleController    : test2
-2021-10-11 16:47:52.158 DEBUG 9499 --- [nio-8080-exec-3] s.r.i.StatefulRetryOperationsInterceptor : Executing proxied method in stateful retry: public java.lang.String org.pnop.sample.waf.cb.sb.SampleService.call2(int)(5aa297f)
-2021-10-11 16:47:52.159 TRACE 9499 --- [nio-8080-exec-3] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=2, lastException=org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 INTERNAL SERVER ERROR: [no body], exhausted=false]
-2021-10-11 16:47:52.159 TRACE 9499 --- [nio-8080-exec-3] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
-2021-10-11 16:47:52.159 DEBUG 9499 --- [nio-8080-exec-3] o.s.retry.support.RetryTemplate          : Retry: count=2
-2021-10-11 16:47:52.159  INFO 9499 --- [nio-8080-exec-3] org.pnop.sample.waf.cb.sb.SampleService  : request : http://httpbin.org/status/500
-2021-10-11 16:47:52.362 TRACE 9499 --- [nio-8080-exec-3] o.s.r.policy.CircuitBreakerRetryPolicy   : Opening circuit
-2021-10-11 16:47:52.362 DEBUG 9499 --- [nio-8080-exec-3] o.s.retry.support.RetryTemplate          : Checking for rethrow: count=3
-2021-10-11 16:47:52.363 ERROR 9499 --- [nio-8080-exec-3] org.pnop.sample.waf.cb.sb.SampleService  : Fallback for call invoked
-2021-10-11 16:47:52.363 DEBUG 9499 --- [nio-8080-exec-3] s.r.i.StatefulRetryOperationsInterceptor : Exiting proxied method in stateful retry with result: (fallback)
-2021-10-11 16:47:52.375  INFO 9499 --- [nio-8080-exec-4] o.p.sample.waf.cb.sb.SampleController    : test2
-2021-10-11 16:47:52.376 DEBUG 9499 --- [nio-8080-exec-4] s.r.i.StatefulRetryOperationsInterceptor : Executing proxied method in stateful retry: public java.lang.String org.pnop.sample.waf.cb.sb.SampleService.call2(int)(580ab561)
-2021-10-11 16:47:52.377 TRACE 9499 --- [nio-8080-exec-4] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=3, lastException=org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 INTERNAL SERVER ERROR: [no body], exhausted=false]
-2021-10-11 16:47:52.377 ERROR 9499 --- [nio-8080-exec-4] org.pnop.sample.waf.cb.sb.SampleService  : Fallback for call invoked
-2021-10-11 16:47:52.377 DEBUG 9499 --- [nio-8080-exec-4] s.r.i.StatefulRetryOperationsInterceptor : Exiting proxied method in stateful retry with result: (fallback)
-2021-10-11 16:47:52.385  INFO 9499 --- [nio-8080-exec-5] o.p.sample.waf.cb.sb.SampleController    : test2
-2021-10-11 16:47:52.385 DEBUG 9499 --- [nio-8080-exec-5] s.r.i.StatefulRetryOperationsInterceptor : Executing proxied method in stateful retry: public java.lang.String org.pnop.sample.waf.cb.sb.SampleService.call2(int)(662ffed8)
-2021-10-11 16:47:52.385 TRACE 9499 --- [nio-8080-exec-5] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=3, lastException=org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 INTERNAL SERVER ERROR: [no body], exhausted=false]
-2021-10-11 16:47:52.385 ERROR 9499 --- [nio-8080-exec-5] org.pnop.sample.waf.cb.sb.SampleService  : Fallback for call invoked
-2021-10-11 16:47:52.385 DEBUG 9499 --- [nio-8080-exec-5] s.r.i.StatefulRetryOperationsInterceptor : Exiting proxied method in stateful retry with result: (fallback)
+2021-10-11 21:14:38.433  INFO 1462 --- [nio-8080-exec-1] o.p.sample.waf.cb.sb.SampleController    : test1
+2021-10-11 21:14:38.492 TRACE 1462 --- [nio-8080-exec-1] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=0, lastException=null, exhausted=false]
+2021-10-11 21:14:38.493 TRACE 1462 --- [nio-8080-exec-1] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
+2021-10-11 21:14:38.493 DEBUG 1462 --- [nio-8080-exec-1] o.s.retry.support.RetryTemplate          : Retry: count=0
+2021-10-11 21:14:38.498  INFO 1462 --- [nio-8080-exec-1] org.pnop.sample.waf.cb.sb.SampleService  : request : http://httpbin.org/status/500
+2021-10-11 21:14:39.076 TRACE 1462 --- [nio-8080-exec-1] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
+2021-10-11 21:14:39.076 DEBUG 1462 --- [nio-8080-exec-1] o.s.retry.support.RetryTemplate          : Checking for rethrow: count=1
+2021-10-11 21:14:39.076 ERROR 1462 --- [nio-8080-exec-1] org.pnop.sample.waf.cb.sb.SampleService  : org.springframework.web.client.HttpServerErrorException$InternalServerError 500 INTERNAL SERVER ERROR: [no body]
+2021-10-11 21:14:39.146  INFO 1462 --- [nio-8080-exec-2] o.p.sample.waf.cb.sb.SampleController    : test1
+2021-10-11 21:14:39.147 TRACE 1462 --- [nio-8080-exec-2] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=1, lastException=org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 INTERNAL SERVER ERROR: [no body], exhausted=false]
+2021-10-11 21:14:39.148 TRACE 1462 --- [nio-8080-exec-2] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
+2021-10-11 21:14:39.148 DEBUG 1462 --- [nio-8080-exec-2] o.s.retry.support.RetryTemplate          : Retry: count=1
+2021-10-11 21:14:39.148  INFO 1462 --- [nio-8080-exec-2] org.pnop.sample.waf.cb.sb.SampleService  : request : http://httpbin.org/status/500
+2021-10-11 21:14:39.363 TRACE 1462 --- [nio-8080-exec-2] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
+2021-10-11 21:14:39.363 DEBUG 1462 --- [nio-8080-exec-2] o.s.retry.support.RetryTemplate          : Checking for rethrow: count=2
+2021-10-11 21:14:39.363 ERROR 1462 --- [nio-8080-exec-2] org.pnop.sample.waf.cb.sb.SampleService  : org.springframework.web.client.HttpServerErrorException$InternalServerError 500 INTERNAL SERVER ERROR: [no body]
+2021-10-11 21:14:39.375  INFO 1462 --- [nio-8080-exec-3] o.p.sample.waf.cb.sb.SampleController    : test1
+2021-10-11 21:14:39.376 TRACE 1462 --- [nio-8080-exec-3] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=2, lastException=org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 INTERNAL SERVER ERROR: [no body], exhausted=false]
+2021-10-11 21:14:39.376 TRACE 1462 --- [nio-8080-exec-3] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
+2021-10-11 21:14:39.376 DEBUG 1462 --- [nio-8080-exec-3] o.s.retry.support.RetryTemplate          : Retry: count=2
+2021-10-11 21:14:39.376  INFO 1462 --- [nio-8080-exec-3] org.pnop.sample.waf.cb.sb.SampleService  : request : http://httpbin.org/status/500
+2021-10-11 21:14:39.570 TRACE 1462 --- [nio-8080-exec-3] o.s.r.policy.CircuitBreakerRetryPolicy   : Opening circuit
+2021-10-11 21:14:39.570 TRACE 1462 --- [nio-8080-exec-3] o.s.r.policy.CircuitBreakerRetryPolicy   : Opening circuit
+2021-10-11 21:14:39.570 DEBUG 1462 --- [nio-8080-exec-3] o.s.retry.support.RetryTemplate          : Checking for rethrow: count=3
+2021-10-11 21:14:39.571 ERROR 1462 --- [nio-8080-exec-3] org.pnop.sample.waf.cb.sb.SampleService  : org.springframework.web.client.HttpServerErrorException$InternalServerError 500 INTERNAL SERVER ERROR: [no body]
+2021-10-11 21:14:39.583  INFO 1462 --- [nio-8080-exec-4] o.p.sample.waf.cb.sb.SampleController    : test1
+2021-10-11 21:14:39.584 TRACE 1462 --- [nio-8080-exec-4] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=3, lastException=org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 INTERNAL SERVER ERROR: [no body], exhausted=false]
+2021-10-11 21:14:39.584 ERROR 1462 --- [nio-8080-exec-4] org.pnop.sample.waf.cb.sb.SampleService  : org.springframework.web.client.HttpServerErrorException$InternalServerError 500 INTERNAL SERVER ERROR: [no body]
+2021-10-11 21:14:39.595  INFO 1462 --- [nio-8080-exec-5] o.p.sample.waf.cb.sb.SampleController    : test1
+2021-10-11 21:14:39.595 TRACE 1462 --- [nio-8080-exec-5] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=3, lastException=org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 INTERNAL SERVER ERROR: [no body], exhausted=false]
+2021-10-11 21:14:39.595 ERROR 1462 --- [nio-8080-exec-5] org.pnop.sample.waf.cb.sb.SampleService  : org.springframework.web.client.HttpServerErrorException$InternalServerError 500 INTERNAL SERVER ERROR: [no body]
 ```
+
+一定期間経過すると（設定では10秒）、設定はリセットされ CLOSED に遷移しますが、閾値を超えると再び OPEN へと遷移します。
+
+```log
+2021-10-11 21:14:51.606  INFO 1462 --- [nio-8080-exec-6] o.p.sample.waf.cb.sb.SampleController    : test1
+2021-10-11 21:14:51.607 TRACE 1462 --- [nio-8080-exec-6] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=3, lastException=org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 INTERNAL SERVER ERROR: [no body], exhausted=false]
+2021-10-11 21:14:51.607 TRACE 1462 --- [nio-8080-exec-6] o.s.r.policy.CircuitBreakerRetryPolicy   : Closing
+2021-10-11 21:14:51.607 TRACE 1462 --- [nio-8080-exec-6] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
+2021-10-11 21:14:51.607 TRACE 1462 --- [nio-8080-exec-6] o.s.r.policy.CircuitBreakerRetryPolicy   : Resetting context
+2021-10-11 21:14:51.607 TRACE 1462 --- [nio-8080-exec-6] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
+2021-10-11 21:14:51.607 DEBUG 1462 --- [nio-8080-exec-6] o.s.retry.support.RetryTemplate          : Retry: count=0
+2021-10-11 21:14:51.607  INFO 1462 --- [nio-8080-exec-6] org.pnop.sample.waf.cb.sb.SampleService  : request : http://httpbin.org/status/200
+2021-10-11 21:14:52.811  INFO 1462 --- [nio-8080-exec-1] o.p.sample.waf.cb.sb.SampleController    : test1
+2021-10-11 21:14:52.811 TRACE 1462 --- [nio-8080-exec-1] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=0, lastException=null, exhausted=false]
+2021-10-11 21:14:52.812 TRACE 1462 --- [nio-8080-exec-1] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
+2021-10-11 21:14:52.812 DEBUG 1462 --- [nio-8080-exec-1] o.s.retry.support.RetryTemplate          : Retry: count=0
+2021-10-11 21:14:52.812  INFO 1462 --- [nio-8080-exec-1] org.pnop.sample.waf.cb.sb.SampleService  : request : http://httpbin.org/status/500
+2021-10-11 21:14:53.004 TRACE 1462 --- [nio-8080-exec-1] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
+2021-10-11 21:14:53.005 DEBUG 1462 --- [nio-8080-exec-1] o.s.retry.support.RetryTemplate          : Checking for rethrow: count=1
+2021-10-11 21:14:53.005 ERROR 1462 --- [nio-8080-exec-1] org.pnop.sample.waf.cb.sb.SampleService  : org.springframework.web.client.HttpServerErrorException$InternalServerError 500 INTERNAL SERVER ERROR: [no body]
+2021-10-11 21:14:53.017  INFO 1462 --- [nio-8080-exec-2] o.p.sample.waf.cb.sb.SampleController    : test1
+2021-10-11 21:14:53.018 TRACE 1462 --- [nio-8080-exec-2] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=1, lastException=org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 INTERNAL SERVER ERROR: [no body], exhausted=false]
+2021-10-11 21:14:53.018 TRACE 1462 --- [nio-8080-exec-2] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
+2021-10-11 21:14:53.018 DEBUG 1462 --- [nio-8080-exec-2] o.s.retry.support.RetryTemplate          : Retry: count=1
+2021-10-11 21:14:53.018  INFO 1462 --- [nio-8080-exec-2] org.pnop.sample.waf.cb.sb.SampleService  : request : http://httpbin.org/status/500
+2021-10-11 21:14:53.213 TRACE 1462 --- [nio-8080-exec-2] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
+2021-10-11 21:14:53.214 DEBUG 1462 --- [nio-8080-exec-2] o.s.retry.support.RetryTemplate          : Checking for rethrow: count=2
+2021-10-11 21:14:53.214 ERROR 1462 --- [nio-8080-exec-2] org.pnop.sample.waf.cb.sb.SampleService  : org.springframework.web.client.HttpServerErrorException$InternalServerError 500 INTERNAL SERVER ERROR: [no body]
+2021-10-11 21:14:53.225  INFO 1462 --- [nio-8080-exec-3] o.p.sample.waf.cb.sb.SampleController    : test1
+2021-10-11 21:14:53.226 TRACE 1462 --- [nio-8080-exec-3] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=2, lastException=org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 INTERNAL SERVER ERROR: [no body], exhausted=false]
+2021-10-11 21:14:53.226 TRACE 1462 --- [nio-8080-exec-3] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
+2021-10-11 21:14:53.226 DEBUG 1462 --- [nio-8080-exec-3] o.s.retry.support.RetryTemplate          : Retry: count=2
+2021-10-11 21:14:53.226  INFO 1462 --- [nio-8080-exec-3] org.pnop.sample.waf.cb.sb.SampleService  : request : http://httpbin.org/status/500
+2021-10-11 21:14:53.420 TRACE 1462 --- [nio-8080-exec-3] o.s.r.policy.CircuitBreakerRetryPolicy   : Opening circuit
+2021-10-11 21:14:53.421 TRACE 1462 --- [nio-8080-exec-3] o.s.r.policy.CircuitBreakerRetryPolicy   : Opening circuit
+2021-10-11 21:14:53.421 DEBUG 1462 --- [nio-8080-exec-3] o.s.retry.support.RetryTemplate          : Checking for rethrow: count=3
+2021-10-11 21:14:53.421 ERROR 1462 --- [nio-8080-exec-3] org.pnop.sample.waf.cb.sb.SampleService  : org.springframework.web.client.HttpServerErrorException$InternalServerError 500 INTERNAL SERVER ERROR: [no body]
+2021-10-11 21:14:53.433  INFO 1462 --- [nio-8080-exec-4] o.p.sample.waf.cb.sb.SampleController    : test1
+2021-10-11 21:14:53.434 TRACE 1462 --- [nio-8080-exec-4] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=3, lastException=org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 INTERNAL SERVER ERROR: [no body], exhausted=false]
+2021-10-11 21:14:53.434 ERROR 1462 --- [nio-8080-exec-4] org.pnop.sample.waf.cb.sb.SampleService  : org.springframework.web.client.HttpServerErrorException$InternalServerError 500 INTERNAL SERVER ERROR: [no body]
+2021-10-11 21:14:53.445  INFO 1462 --- [nio-8080-exec-5] o.p.sample.waf.cb.sb.SampleController    : test1
+2021-10-11 21:14:53.445 TRACE 1462 --- [nio-8080-exec-5] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=3, lastException=org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 INTERNAL SERVER ERROR: [no body], exhausted=false]
+2021-10-11 21:14:53.445 ERROR 1462 --- [nio-8080-exec-5] org.pnop.sample.waf.cb.sb.SampleService  : org.springframework.web.client.HttpServerErrorException$InternalServerError 500 INTERNAL SERVER ERROR: [no body]
+2021-10-11 21:14:53.456  INFO 1462 --- [nio-8080-exec-6] o.p.sample.waf.cb.sb.SampleController    : test1
+2021-10-11 21:14:53.457 TRACE 1462 --- [nio-8080-exec-6] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=3, lastException=org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 INTERNAL SERVER ERROR: [no body], exhausted=false]
+2021-10-11 21:14:53.457 ERROR 1462 --- [nio-8080-exec-6] org.pnop.sample.waf.cb.sb.SampleService  : org.springframework.web.client.HttpServerErrorException$InternalServerError 500 INTERNAL SERVER ERROR: [no body]
+```
+
+ログ出力の冗長な部分を一部割愛しています。
+
+`test2` も同様の振る舞いをしますが、ログが多少異なります。
+
+```log
+2021-10-11 21:20:43.246  INFO 1462 --- [nio-8080-exec-7] o.p.sample.waf.cb.sb.SampleController    : test2
+2021-10-11 21:20:43.281 DEBUG 1462 --- [nio-8080-exec-7] s.r.i.StatefulRetryOperationsInterceptor : Executing proxied method in stateful retry: public java.lang.String org.pnop.sample.waf.cb.sb.SampleService.call2(int)(2c091021)
+2021-10-11 21:20:43.291 TRACE 1462 --- [nio-8080-exec-7] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=0, lastException=null, exhausted=false]
+2021-10-11 21:20:43.291 TRACE 1462 --- [nio-8080-exec-7] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
+2021-10-11 21:20:43.291 DEBUG 1462 --- [nio-8080-exec-7] o.s.retry.support.RetryTemplate          : Retry: count=0
+2021-10-11 21:20:43.292  INFO 1462 --- [nio-8080-exec-7] org.pnop.sample.waf.cb.sb.SampleService  : request : http://httpbin.org/status/500
+2021-10-11 21:20:43.738 TRACE 1462 --- [nio-8080-exec-7] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
+2021-10-11 21:20:43.738 DEBUG 1462 --- [nio-8080-exec-7] o.s.retry.support.RetryTemplate          : Checking for rethrow: count=1
+2021-10-11 21:20:43.738 ERROR 1462 --- [nio-8080-exec-7] org.pnop.sample.waf.cb.sb.SampleService  : Fallback for call invoked
+2021-10-11 21:20:43.738 DEBUG 1462 --- [nio-8080-exec-7] s.r.i.StatefulRetryOperationsInterceptor : Exiting proxied method in stateful retry with result: (fallback)
+2021-10-11 21:20:43.749  INFO 1462 --- [nio-8080-exec-8] o.p.sample.waf.cb.sb.SampleController    : test2
+2021-10-11 21:20:43.749 DEBUG 1462 --- [nio-8080-exec-8] s.r.i.StatefulRetryOperationsInterceptor : Executing proxied method in stateful retry: public java.lang.String org.pnop.sample.waf.cb.sb.SampleService.call2(int)(19f56f81)
+2021-10-11 21:20:43.751 TRACE 1462 --- [nio-8080-exec-8] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=1, lastException=org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 INTERNAL SERVER ERROR: [no body], exhausted=false]
+2021-10-11 21:20:43.751 TRACE 1462 --- [nio-8080-exec-8] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
+2021-10-11 21:20:43.751 DEBUG 1462 --- [nio-8080-exec-8] o.s.retry.support.RetryTemplate          : Retry: count=1
+2021-10-11 21:20:43.751  INFO 1462 --- [nio-8080-exec-8] org.pnop.sample.waf.cb.sb.SampleService  : request : http://httpbin.org/status/500
+2021-10-11 21:20:43.976 TRACE 1462 --- [nio-8080-exec-8] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
+2021-10-11 21:20:43.976 DEBUG 1462 --- [nio-8080-exec-8] o.s.retry.support.RetryTemplate          : Checking for rethrow: count=2
+2021-10-11 21:20:43.976 ERROR 1462 --- [nio-8080-exec-8] org.pnop.sample.waf.cb.sb.SampleService  : Fallback for call invoked
+2021-10-11 21:20:43.976 DEBUG 1462 --- [nio-8080-exec-8] s.r.i.StatefulRetryOperationsInterceptor : Exiting proxied method in stateful retry with result: (fallback)
+2021-10-11 21:20:43.987  INFO 1462 --- [nio-8080-exec-9] o.p.sample.waf.cb.sb.SampleController    : test2
+2021-10-11 21:20:43.987 DEBUG 1462 --- [nio-8080-exec-9] s.r.i.StatefulRetryOperationsInterceptor : Executing proxied method in stateful retry: public java.lang.String org.pnop.sample.waf.cb.sb.SampleService.call2(int)(41638994)
+2021-10-11 21:20:43.987 TRACE 1462 --- [nio-8080-exec-9] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=2, lastException=org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 INTERNAL SERVER ERROR: [no body], exhausted=false]
+2021-10-11 21:20:43.988 TRACE 1462 --- [nio-8080-exec-9] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
+2021-10-11 21:20:43.988 DEBUG 1462 --- [nio-8080-exec-9] o.s.retry.support.RetryTemplate          : Retry: count=2
+2021-10-11 21:20:43.988  INFO 1462 --- [nio-8080-exec-9] org.pnop.sample.waf.cb.sb.SampleService  : request : http://httpbin.org/status/500
+2021-10-11 21:20:44.392 TRACE 1462 --- [nio-8080-exec-9] o.s.r.policy.CircuitBreakerRetryPolicy   : Opening circuit
+2021-10-11 21:20:44.392 DEBUG 1462 --- [nio-8080-exec-9] o.s.retry.support.RetryTemplate          : Checking for rethrow: count=3
+2021-10-11 21:20:44.392 ERROR 1462 --- [nio-8080-exec-9] org.pnop.sample.waf.cb.sb.SampleService  : Fallback for call invoked
+2021-10-11 21:20:44.392 DEBUG 1462 --- [nio-8080-exec-9] s.r.i.StatefulRetryOperationsInterceptor : Exiting proxied method in stateful retry with result: (fallback)
+2021-10-11 21:20:44.403  INFO 1462 --- [nio-8080-exec-1] o.p.sample.waf.cb.sb.SampleController    : test2
+2021-10-11 21:20:44.403 DEBUG 1462 --- [nio-8080-exec-1] s.r.i.StatefulRetryOperationsInterceptor : Executing proxied method in stateful retry: public java.lang.String org.pnop.sample.waf.cb.sb.SampleService.call2(int)(7a9576ef)
+2021-10-11 21:20:44.404 TRACE 1462 --- [nio-8080-exec-1] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=3, lastException=org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 INTERNAL SERVER ERROR: [no body], exhausted=false]
+2021-10-11 21:20:44.404 ERROR 1462 --- [nio-8080-exec-1] org.pnop.sample.waf.cb.sb.SampleService  : Fallback for call invoked
+2021-10-11 21:20:44.404 DEBUG 1462 --- [nio-8080-exec-1] s.r.i.StatefulRetryOperationsInterceptor : Exiting proxied method in stateful retry with result: (fallback)
+2021-10-11 21:20:44.412  INFO 1462 --- [nio-8080-exec-2] o.p.sample.waf.cb.sb.SampleController    : test2
+2021-10-11 21:20:44.412 DEBUG 1462 --- [nio-8080-exec-2] s.r.i.StatefulRetryOperationsInterceptor : Executing proxied method in stateful retry: public java.lang.String org.pnop.sample.waf.cb.sb.SampleService.call2(int)(2b69880c)
+2021-10-11 21:20:44.412 TRACE 1462 --- [nio-8080-exec-2] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=3, lastException=org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 INTERNAL SERVER ERROR: [no body], exhausted=false]
+2021-10-11 21:20:44.413 ERROR 1462 --- [nio-8080-exec-2] org.pnop.sample.waf.cb.sb.SampleService  : Fallback for call invoked
+2021-10-11 21:20:44.413 DEBUG 1462 --- [nio-8080-exec-2] s.r.i.StatefulRetryOperationsInterceptor : Exiting proxied method in stateful retry with result: (fallback)
+2021-10-11 21:20:56.422  INFO 1462 --- [nio-8080-exec-3] o.p.sample.waf.cb.sb.SampleController    : test2
+2021-10-11 21:20:56.423 DEBUG 1462 --- [nio-8080-exec-3] s.r.i.StatefulRetryOperationsInterceptor : Executing proxied method in stateful retry: public java.lang.String org.pnop.sample.waf.cb.sb.SampleService.call2(int)(630b66fb)
+2021-10-11 21:20:56.423 TRACE 1462 --- [nio-8080-exec-3] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=3, lastException=org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 INTERNAL SERVER ERROR: [no body], exhausted=false]
+2021-10-11 21:20:56.423 TRACE 1462 --- [nio-8080-exec-3] o.s.r.policy.CircuitBreakerRetryPolicy   : Closing
+2021-10-11 21:20:56.423 TRACE 1462 --- [nio-8080-exec-3] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
+2021-10-11 21:20:56.423 DEBUG 1462 --- [nio-8080-exec-3] o.s.retry.support.RetryTemplate          : Retry: count=0
+2021-10-11 21:20:56.423  INFO 1462 --- [nio-8080-exec-3] org.pnop.sample.waf.cb.sb.SampleService  : request : http://httpbin.org/status/200
+2021-10-11 21:20:56.802  INFO 1462 --- [nio-8080-exec-3] org.pnop.sample.waf.cb.sb.SampleService  : success
+2021-10-11 21:20:56.802 DEBUG 1462 --- [nio-8080-exec-3] s.r.i.StatefulRetryOperationsInterceptor : Exiting proxied method in stateful retry with result: (success)
+2021-10-11 21:20:56.814  INFO 1462 --- [nio-8080-exec-4] o.p.sample.waf.cb.sb.SampleController    : test2
+2021-10-11 21:20:56.814 DEBUG 1462 --- [nio-8080-exec-4] s.r.i.StatefulRetryOperationsInterceptor : Executing proxied method in stateful retry: public java.lang.String org.pnop.sample.waf.cb.sb.SampleService.call2(int)(5c2f4359)
+2021-10-11 21:20:56.814 TRACE 1462 --- [nio-8080-exec-4] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=0, lastException=null, exhausted=false]
+2021-10-11 21:20:56.814 TRACE 1462 --- [nio-8080-exec-4] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
+2021-10-11 21:20:56.815 DEBUG 1462 --- [nio-8080-exec-4] o.s.retry.support.RetryTemplate          : Retry: count=0
+2021-10-11 21:20:56.815  INFO 1462 --- [nio-8080-exec-4] org.pnop.sample.waf.cb.sb.SampleService  : request : http://httpbin.org/status/200
+2021-10-11 21:20:57.006  INFO 1462 --- [nio-8080-exec-4] org.pnop.sample.waf.cb.sb.SampleService  : success
+2021-10-11 21:20:57.006 DEBUG 1462 --- [nio-8080-exec-4] s.r.i.StatefulRetryOperationsInterceptor : Exiting proxied method in stateful retry with result: (success)
+2021-10-11 21:20:57.018  INFO 1462 --- [nio-8080-exec-5] o.p.sample.waf.cb.sb.SampleController    : test2
+2021-10-11 21:20:57.018 DEBUG 1462 --- [nio-8080-exec-5] s.r.i.StatefulRetryOperationsInterceptor : Executing proxied method in stateful retry: public java.lang.String org.pnop.sample.waf.cb.sb.SampleService.call2(int)(12801f15)
+2021-10-11 21:20:57.018 TRACE 1462 --- [nio-8080-exec-5] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=0, lastException=null, exhausted=false]
+2021-10-11 21:20:57.018 TRACE 1462 --- [nio-8080-exec-5] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
+2021-10-11 21:20:57.018 DEBUG 1462 --- [nio-8080-exec-5] o.s.retry.support.RetryTemplate          : Retry: count=0
+2021-10-11 21:20:57.018  INFO 1462 --- [nio-8080-exec-5] org.pnop.sample.waf.cb.sb.SampleService  : request : http://httpbin.org/status/500
+2021-10-11 21:20:57.208 TRACE 1462 --- [nio-8080-exec-5] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
+2021-10-11 21:20:57.209 DEBUG 1462 --- [nio-8080-exec-5] o.s.retry.support.RetryTemplate          : Checking for rethrow: count=1
+2021-10-11 21:20:57.209 ERROR 1462 --- [nio-8080-exec-5] org.pnop.sample.waf.cb.sb.SampleService  : Fallback for call invoked
+2021-10-11 21:20:57.209 DEBUG 1462 --- [nio-8080-exec-5] s.r.i.StatefulRetryOperationsInterceptor : Exiting proxied method in stateful retry with result: (fallback)
+2021-10-11 21:20:57.220  INFO 1462 --- [nio-8080-exec-6] o.p.sample.waf.cb.sb.SampleController    : test2
+2021-10-11 21:20:57.220 DEBUG 1462 --- [nio-8080-exec-6] s.r.i.StatefulRetryOperationsInterceptor : Executing proxied method in stateful retry: public java.lang.String org.pnop.sample.waf.cb.sb.SampleService.call2(int)(2a6747bb)
+2021-10-11 21:20:57.221 TRACE 1462 --- [nio-8080-exec-6] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=1, lastException=org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 INTERNAL SERVER ERROR: [no body], exhausted=false]
+2021-10-11 21:20:57.221 TRACE 1462 --- [nio-8080-exec-6] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
+2021-10-11 21:20:57.221 DEBUG 1462 --- [nio-8080-exec-6] o.s.retry.support.RetryTemplate          : Retry: count=1
+2021-10-11 21:20:57.221  INFO 1462 --- [nio-8080-exec-6] org.pnop.sample.waf.cb.sb.SampleService  : request : http://httpbin.org/status/500
+2021-10-11 21:20:57.411 TRACE 1462 --- [nio-8080-exec-6] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
+2021-10-11 21:20:57.411 DEBUG 1462 --- [nio-8080-exec-6] o.s.retry.support.RetryTemplate          : Checking for rethrow: count=2
+2021-10-11 21:20:57.411 ERROR 1462 --- [nio-8080-exec-6] org.pnop.sample.waf.cb.sb.SampleService  : Fallback for call invoked
+2021-10-11 21:20:57.411 DEBUG 1462 --- [nio-8080-exec-6] s.r.i.StatefulRetryOperationsInterceptor : Exiting proxied method in stateful retry with result: (fallback)
+2021-10-11 21:20:57.421  INFO 1462 --- [nio-8080-exec-7] o.p.sample.waf.cb.sb.SampleController    : test2
+2021-10-11 21:20:57.421 DEBUG 1462 --- [nio-8080-exec-7] s.r.i.StatefulRetryOperationsInterceptor : Executing proxied method in stateful retry: public java.lang.String org.pnop.sample.waf.cb.sb.SampleService.call2(int)(369e1a42)
+2021-10-11 21:20:57.422 TRACE 1462 --- [nio-8080-exec-7] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=2, lastException=org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 INTERNAL SERVER ERROR: [no body], exhausted=false]
+2021-10-11 21:20:57.422 TRACE 1462 --- [nio-8080-exec-7] o.s.r.policy.CircuitBreakerRetryPolicy   : Open: false
+2021-10-11 21:20:57.422 DEBUG 1462 --- [nio-8080-exec-7] o.s.retry.support.RetryTemplate          : Retry: count=2
+2021-10-11 21:20:57.422  INFO 1462 --- [nio-8080-exec-7] org.pnop.sample.waf.cb.sb.SampleService  : request : http://httpbin.org/status/500
+2021-10-11 21:20:57.612 TRACE 1462 --- [nio-8080-exec-7] o.s.r.policy.CircuitBreakerRetryPolicy   : Opening circuit
+2021-10-11 21:20:57.613 DEBUG 1462 --- [nio-8080-exec-7] o.s.retry.support.RetryTemplate          : Checking for rethrow: count=3
+2021-10-11 21:20:57.613 ERROR 1462 --- [nio-8080-exec-7] org.pnop.sample.waf.cb.sb.SampleService  : Fallback for call invoked
+2021-10-11 21:20:57.613 DEBUG 1462 --- [nio-8080-exec-7] s.r.i.StatefulRetryOperationsInterceptor : Exiting proxied method in stateful retry with result: (fallback)
+2021-10-11 21:20:57.625  INFO 1462 --- [nio-8080-exec-8] o.p.sample.waf.cb.sb.SampleController    : test2
+2021-10-11 21:20:57.626 DEBUG 1462 --- [nio-8080-exec-8] s.r.i.StatefulRetryOperationsInterceptor : Executing proxied method in stateful retry: public java.lang.String org.pnop.sample.waf.cb.sb.SampleService.call2(int)(173292cf)
+2021-10-11 21:20:57.626 TRACE 1462 --- [nio-8080-exec-8] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=3, lastException=org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 INTERNAL SERVER ERROR: [no body], exhausted=false]
+2021-10-11 21:20:57.627 ERROR 1462 --- [nio-8080-exec-8] org.pnop.sample.waf.cb.sb.SampleService  : Fallback for call invoked
+2021-10-11 21:20:57.627 DEBUG 1462 --- [nio-8080-exec-8] s.r.i.StatefulRetryOperationsInterceptor : Exiting proxied method in stateful retry with result: (fallback)
+2021-10-11 21:20:57.639  INFO 1462 --- [nio-8080-exec-9] o.p.sample.waf.cb.sb.SampleController    : test2
+2021-10-11 21:20:57.639 DEBUG 1462 --- [nio-8080-exec-9] s.r.i.StatefulRetryOperationsInterceptor : Executing proxied method in stateful retry: public java.lang.String org.pnop.sample.waf.cb.sb.SampleService.call2(int)(4fa47fc8)
+2021-10-11 21:20:57.639 TRACE 1462 --- [nio-8080-exec-9] o.s.retry.support.RetryTemplate          : RetryContext retrieved: [RetryContext: count=3, lastException=org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 INTERNAL SERVER ERROR: [no body], exhausted=false]
+2021-10-11 21:20:57.640 ERROR 1462 --- [nio-8080-exec-9] org.pnop.sample.waf.cb.sb.SampleService  : Fallback for call invoked
+2021-10-11 21:20:57.640 DEBUG 1462 --- [nio-8080-exec-9] s.r.i.StatefulRetryOperationsInterceptor : Exiting proxied method in stateful retry with result: (fallback)
+```
+
+## 参考リンク
+
+* [Spring Cloud Circuit Breaker とは？ - リファレンスドキュメント](https://spring.pleiades.io/projects/spring-cloud-circuitbreaker)
+
+以上
