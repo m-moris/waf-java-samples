@@ -8,8 +8,10 @@ services:
       - "10001:10001"
       - "10002:10002"
     volumes:
-      - ~/azurite/data
+      - ~/azurite:/data
   producer:
+    depends_on: 
+      - emulator
     image: waf-sample/producer-webapp
     build:
       context: ./producer-webapp
@@ -19,6 +21,8 @@ services:
     ports:
       - "10080:8080"
   consumer:
+    depends_on: 
+      - emulator
     image: waf-sample/consumer-function
     build:
       context: ./consumer-function
