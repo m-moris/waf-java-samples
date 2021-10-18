@@ -1,4 +1,4 @@
-package org.pnop.waf.sample.act.sb;
+package org.pnop.waf.sample.act.sb.indicator;
 
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
@@ -17,8 +17,11 @@ public class MyHealthIndicator implements HealthIndicator {
             return Health
                 .down()
                 .withDetail("Error Code", errorCode)
+                .withDetail("PropertyA", 99999)
+                .withDetail("PropertyB", false)
                 .build();
         }
+
         return Health
             .up()
             .withDetail("Property1", 1234)
@@ -28,6 +31,7 @@ public class MyHealthIndicator implements HealthIndicator {
     }
 
     private int check() {
+        // 実際にはアプリケーションのエラーチェック等を行う
         if (Math.random() < 0.5) {
             log.warn("An error has occurred");
             return 1;

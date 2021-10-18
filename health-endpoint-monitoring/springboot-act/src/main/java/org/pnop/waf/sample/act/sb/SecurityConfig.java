@@ -27,26 +27,26 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-
-        var filter = new HeaderCheckFilter("X-TEST-KEY");
-        filter.setAuthenticationManager(new Hoge());
-        http
-            .antMatcher("/actuator/**")
-            .addFilter(filter)
-            .authorizeRequests()
-            .anyRequest()
-            .authenticated()
-            .and()
-            .exceptionHandling()
-            .authenticationEntryPoint(new AuthenticationEntryPoint() {
-                @Override
-                public void commence(HttpServletRequest request, HttpServletResponse response,
-                    AuthenticationException authException) throws IOException, ServletException {
-                    log.debug("Pre-authenticated entry point called. Rejecting access");
-                    response.sendError(HttpServletResponse.SC_NOT_FOUND, "Not Found");
-                }
-            });
-
+//
+//        var filter = new HeaderCheckFilter("X-TEST-KEY");
+//        filter.setAuthenticationManager(new Hoge());
+//        http
+//            .antMatcher("/actuator/**")
+//            .addFilter(filter)
+//            .authorizeRequests()
+//            .anyRequest()
+//            .authenticated()
+//            .and()
+//            .exceptionHandling()
+//            .authenticationEntryPoint(new AuthenticationEntryPoint() {
+//                @Override
+//                public void commence(HttpServletRequest request, HttpServletResponse response,
+//                    AuthenticationException authException) throws IOException, ServletException {
+//                    log.debug("Pre-authenticated entry point called. Rejecting access");
+//                    response.sendError(HttpServletResponse.SC_NOT_FOUND, "Not Found");
+//                }
+//            });
+//
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
 

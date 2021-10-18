@@ -70,11 +70,11 @@ mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=8888
 
 ## アプリケーションへの操作
 
-エンドポイントを呼び出つつ、アプリケーションログを見てリトライの挙動を確認します。
+エンドポイントを呼び出し、アプリケーションログを見てリトライの挙動を確認します。
 
 ### 単純なリトライ
 
-`hello1` を呼び出します。
+`/hello1` を呼び出します。
 
 ```sh
 curl http://localhost:8080/hello1?name=spring-boot
@@ -115,7 +115,7 @@ curl http://localhost:8080/hello1?name=spring-boot
 
 ### リカバリー
 
-`hello2` を呼び出します。
+`/hello2` を呼び出します。
 
 ```sh
 curl http://localhost:8080/hello2?name=spring-boot
