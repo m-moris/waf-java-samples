@@ -1,20 +1,18 @@
+# キューベースの負荷平準化サンプル
 
+Microsoft Azure Well-Architected Framework に基づくクラウドデザインパターン実装編 (Java/Spring Boot版) のキューベースの負荷平準化パターンのサンプルです。
 
-## 手動での実行方法
+## サンプル一覧
 
+実行可能なサンプルは以下の通りです。
 
+| サンプル名 | 概要 |
+|---|---|
+| [webapps-queue-functions](./webapps-queue-functions/README.md)| WebApps と Azure Storage キュー、および Azure Functionsキュートリガーを組み合わせて実装したサンプル |
 
+## 参考リンク
 
-## Docker Compose 利用しての実行方法
+- [キュー ベースの負荷平準化パターン - Cloud Design Patterns | Microsoft Docs](https://docs.microsoft.com/ja-jp/azure/architecture/patterns/queue-based-load-leveling)
+- [Azure メッセージング サービスの比較 - Azure Event Grid | Microsoft Docs](https://docs.microsoft.com/ja-jp/azure/event-grid/compare-messaging-services)
 
-## Function の Docker Image
-
-docker build ./ -t waf-sample/consumer-function
-
-## ストレージエミュレータの設定と起動
-
-[ローカルでの Azure Storage の開発に Azurite エミュレーターを使用する | Microsoft Docs](https://docs.microsoft.com/ja-jp/azure/storage/common/storage-use-azurite?tabs=visual-studio)
-
-```
-docker run -d -p 10000:10000 -p 10001:10001 mcr.microsoft.com/azure-storage/azurite
-```
+以上

@@ -228,9 +228,6 @@ curl http://localhost:8080/actuator/health/MyApplication
 }
 ```
 
-レスポンスのJSONは見やすさのためにフォーマットしてあります。
-
-
 > :exclamation: レスポンスは見やすさのためフォーマットしてあります
 
 ブラウザで http://localhost:8080/actuator/` にアクセスすると

@@ -1,6 +1,6 @@
-# リトライサンプル
+# サーキットブレーカーサンプル
 
-Microsoft Azure Well-Architected Framework に基づいたクラウドデザインパターンの実勢 Java編のサーキットブレーカーサンプル集です。
+Microsoft Azure Well-Architected Framework に基づくクラウドデザインパターン実装編 (Java/Spring Boot編) のサーキットブレーカーサンプル集です。
 
 ## サンプル一覧
 
@@ -17,4 +17,6 @@ Microsoft Azure Well-Architected Framework に基づいたクラウドデザイ�
 
 * [サーキット ブレーカー パターン - Cloud Design Patterns | Microsoft Docs](https://docs.microsoft.com/ja-jp/azure/architecture/patterns/circuit-breaker)
 * [サーキット ブレーカー パターンの実装 | Microsoft Docs](https://docs.microsoft.com/ja-jp/dotnet/architecture/microservices/implement-resilient-applications/implement-circuit-breaker-pattern)
+
+以上
 
