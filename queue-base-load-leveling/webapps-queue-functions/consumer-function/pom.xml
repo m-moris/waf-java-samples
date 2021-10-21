@@ -3,11 +3,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.pnop.waf.sample</groupId>
-    <artifactId>consumer-function</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>queuebase-lv-consumer-function</artifactId>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
-
-    <name>Azure Java Functions</name>
+    <name>Queue base load levering Azure Function apps</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -27,20 +26,6 @@
             <groupId>com.azure</groupId>
             <artifactId>azure-storage-queue</artifactId>
             <version>12.11.0</version>
-        </dependency>
-        <!-- Test -->
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>5.4.2</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>2.23.4</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
