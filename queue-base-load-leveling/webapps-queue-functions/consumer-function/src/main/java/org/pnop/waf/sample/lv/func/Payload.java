@@ -1,4 +1,4 @@
-package org.pnop.waf.sample;
+package org.pnop.waf.sample.lv.func;
 
 public class Payload {
 

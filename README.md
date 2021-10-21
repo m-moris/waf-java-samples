@@ -5,7 +5,7 @@ Microsoft Azure Well-Architected Framework に基づくクラウドデザイン�
 | フォルダ   | サンプル内容 |
 |---|---|
 | [retry](./retry/README.md) | リトライ（再試行）パターン |
-| [circuitbreaker](./circuitbreaker/README.md) |  サーキットブレーカー パターン|
+| [circuitbreaker](./circuitbreaker/README.md) |  サーキットブレーカー パターン |
 | [health-endpoint-monitoring](./health-endpoint-monitoring/README.md) | 正常性エンドポイントの監視パターン |
 | [queue-base-load-leveling](./queue-base-load-leveling/README.md) | キュー ベースの負荷平準化パターン |
 
@@ -29,7 +29,7 @@ Microsoft Azure Well-Architected Framework に基づくクラウドデザイン�
 
 本サンプルは以下の環境で確認しました。
 
-- Ubuntu20.04 on Windows11 WSL2
+- Windows 10 WSL2 環境上の Ubuntu20.04
 - OpenJDK Runtime Environment Microsoft-25199 (build 11.0.12+7)
 - Apache Maven 3.8.3
 - Eclipse IDE for Java Developers (2021-3)

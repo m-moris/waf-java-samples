@@ -1,4 +1,4 @@
-package org.pnop.waf.sample;
+package org.pnop.waf.sample.lv.func;
 
 import java.util.Date;
 
@@ -22,10 +22,12 @@ public class Function {
      */
     @FunctionName("Function")
     public void run(
-            @QueueTrigger(name = "message", queueName = "loadleveling", connection = "ConnectionString") String message,
-            @BindingName("DequeueCount") int dequeueCount, @BindingName("ExpirationTime") Date expirationTime,
-            @BindingName("InsertionTime") Date insertionTime, final ExecutionContext context)
-            throws JsonMappingException, JsonProcessingException, InterruptedException {
+        @QueueTrigger(name = "message", queueName = "loadleveling", connection = "ConnectionString") String message,
+        @BindingName("DequeueCount") int dequeueCount,
+        @BindingName("ExpirationTime") Date expirationTime,
+        @BindingName("InsertionTime") Date insertionTime,
+        final ExecutionContext context)
+        throws JsonMappingException, JsonProcessingException, InterruptedException {
 
         var logger = context.getLogger();
         logger.info("message :       : " + message);

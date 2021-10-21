@@ -13,7 +13,7 @@ public class SampleController {
         this.service = service;
     }
 
-    @GetMapping("/test1/{code}")
+    @GetMapping("/test/{code}")
     public String test1(@PathVariable("code") int code ) {
         return service.test1(code);
     }

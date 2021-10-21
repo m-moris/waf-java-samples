@@ -31,8 +31,11 @@ public class QueueService {
         log.info("Connection string :{}", connectionString);
         log.info("Queue name        :{}", queueName);
 
-        this.queueClient = new QueueClientBuilder().connectionString(connectionString).queueName(queueName)
-                .messageEncoding(QueueMessageEncoding.BASE64).buildClient();
+        this.queueClient = new QueueClientBuilder()
+            .connectionString(connectionString)
+            .queueName(queueName)
+            .messageEncoding(QueueMessageEncoding.BASE64)
+            .buildClient();
         this.queueClient.create();
     }
 

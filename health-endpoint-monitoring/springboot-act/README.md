@@ -5,7 +5,7 @@ Spring Boot をベースとした正常性エンドポイントのサンプル�
 ## 前提条件
 
 - Java 11 以降
-- Maven 3.6 以降
+- Maven 3.8 以降
 - HTTP エンドポイントを呼び出すために、`curl` を利用します。
 
 ## 依存ライブラリ
@@ -127,13 +127,15 @@ Date: Mon, 18 Oct 2021 14:18:57 GMT
 
 ## Spring Actuator を利用したサンプル
 
+`MyApplication`と `MyApplication2` が独自に拡張したインジケーターです。それぞれ、`MyHealthIndicator` と `MyHealthIndicator2` クラスがそれに対応します。
+
 `/actuator/health` を呼び出します。
 
 ```sh
 curl http://localhost:8080/actuator/health 
 ```
 
-`MyApplication`と `MyApplication2` が独自に拡張したインジケーターです。それぞれ、`MyHealthIndicator` と `MyHealthIndicator2` クラスがそれに対応します。
+レスポンスは以下の通りです。
 
 ```json
 {
@@ -171,7 +173,7 @@ curl http://localhost:8080/actuator/health
 }
 ```
 
-本サンプルではエラーはランダムに発生させています。何度か呼び出して、レスポンスの内容を確認してください。エラーが返却されると、全体が`DOWN`状態となります。
+本サンプルではエラーをランダムに発生させています。何度か呼び出しレスポンスの内容を確認してください。エラーが返却されると、全体が`DOWN`状態となります。
 
 ```json
 {
