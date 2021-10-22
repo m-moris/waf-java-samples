@@ -51,7 +51,7 @@ public class Function {
             .buildClient();
 
         // 遅延
-        sleep(3, logger);
+        sleep(60, logger);
 
         // BLOBへファイル作成
         var headers = new BlobHttpHeaders().setContentType("text/plain");

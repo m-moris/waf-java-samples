@@ -1,5 +1,7 @@
 package org.pnop.waf.sample.async.sb.conrollers;
 
+import java.net.URI;
+
 import org.pnop.waf.sample.async.sb.services.BlobService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -9,38 +11,37 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 @RestController
-public class StateController {
+public class StatusController {
 
     private BlobService service;
 
-    public StateController(BlobService service) {
+    public StatusController(BlobService service) {
         this.service = service;
     }
 
-    @GetMapping("/api/state/{id}")
+    @GetMapping("/api/status/{id}")
     public ResponseEntity<?> checkState(@PathVariable String id) {
 
+        // 302 Found 
         if (service.exists(id)) {
-            // rewrite url (docker)
             var uri = service.getUrl(id);
-            var builder = UriComponentsBuilder.fromUri(uri);
-            builder.host("localhost");
             var headers = new HttpHeaders();
-            headers.setLocation(builder.build().toUri());
-
-            log.info("org = {}", uri.toString());
-            log.info("rew = {}", headers.getLocation().toString());
-            
+            headers.setLocation(rewrite(uri));
             var response = new ResponseEntity<>(headers, HttpStatus.FOUND);
             return response;
         }
 
+        // 202 Accepted
         return ResponseEntity
             .accepted()
             .build();
+    }
+
+    // Docker 上で動作させたとき用に localhost へ強制的にリライト
+    private static URI rewrite(URI uri) {
+        var builder = UriComponentsBuilder.fromUri(uri);
+        builder.host("localhost");
+        return builder.build().toUri();
     }
 }

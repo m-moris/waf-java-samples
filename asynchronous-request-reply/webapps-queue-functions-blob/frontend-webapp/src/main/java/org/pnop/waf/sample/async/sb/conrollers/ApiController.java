@@ -3,7 +3,6 @@ package org.pnop.waf.sample.async.sb.conrollers;
 import java.time.LocalDate;
 
 import org.pnop.waf.sample.async.sb.services.BackendService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
@@ -31,7 +30,7 @@ public class ApiController {
         var response = new PostResponse()
             .setId(id)
             .setAcceptedDate(LocalDate.now());
-        return new ResponseEntity<PostResponse>(response, HttpStatus.ACCEPTED);
+        return ResponseEntity.accepted().body(response);
     }
 
     @Accessors(chain = true)
