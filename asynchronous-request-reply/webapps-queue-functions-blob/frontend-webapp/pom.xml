@@ -8,9 +8,9 @@
         <relativePath /> 
     </parent>
     <groupId>org.pnop.waf.sample</groupId>
-    <artifactId>queuebase-lv-producer-webapp</artifactId>
+    <artifactId>async-frontend-webapp</artifactId>
     <version>1.0.0</version>
-    <name>Queue base load leveling web application</name>
+    <name>Asynchronous Request Reply Web Apps</name>
     <properties>
         <java.version>11</java.version>
     </properties>
@@ -22,6 +22,11 @@
         <dependency>
             <groupId>com.azure</groupId>
             <artifactId>azure-storage-queue</artifactId>
+            <version>12.11.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-storage-blob</artifactId>
             <version>12.11.1</version>
         </dependency>
         <dependency>

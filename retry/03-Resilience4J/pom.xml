@@ -5,7 +5,7 @@
 
     <groupId>org.pnop.sample.waf.retry</groupId>
     <artifactId>r4j-retry-sample</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 
     <name>Resilience4J retry sample</name>
     <description>Resilience4j retry sample.</description>

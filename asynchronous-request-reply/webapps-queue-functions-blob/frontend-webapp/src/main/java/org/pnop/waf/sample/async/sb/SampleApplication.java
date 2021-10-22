@@ -1,13 +1,12 @@
-package org.pnop.waf.sample.act.sb;
+package org.pnop.waf.sample.async.sb;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class HealthEndpointApplication {
+public class SampleApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(HealthEndpointApplication.class, args);
+        SpringApplication.run(SampleApplication.class, args);
     }
-    
 }

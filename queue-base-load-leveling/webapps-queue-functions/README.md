@@ -8,6 +8,7 @@ Spring Boot と Azure Storage キュー、および Azure Functions を利用し
 - Maven 3.8 以降
 - [Azure Storge エミュレータ](https://docs.microsoft.com/ja-jp/azure/storage/common/storage-use-emulator) または [Azurite エミュレータ](https://docs.microsoft.com/ja-jp/azure/storage/common/storage-use-azurite?tabs=npm) 
 - [Azure Functions Core ツール](https://docs.microsoft.com/ja-jp/azure/azure-functions/functions-run-local)
+- もしくはDocker実行環境（Azure Storage エミュレータとAzure Functions Core ツールのインストールが不要になります）
 
 ## サンプルの構成
 
@@ -15,13 +16,13 @@ Spring Boot と Azure Storage キュー、および Azure Functions を利用し
 
 1. プロデューサー Web アプリケーション
 2. Azure Storage キュー
-3. コンシューマー Azure Function アプリケーション
+3. コンシューマー Azure Functions アプリケーション
 
 プロデューサー Web アプリケーションは Spring Boot で実装されており、外部からのリクエストを元にタスクを生成し、キューにメッセージを送信します。
 
 Azure Storage キューは、Azurite エミュレータを利用しており、タスクを平準化します。
 
-コンシューマー Azure Function アプリケーションはキュートリガーで実装しており、キューからメッセージを受信し順次タスクを実行します。本サンプルではタスクの実行の代わりにち任意の秒数スリープして終了します。
+コンシューマー Azure Functions アプリケーションはキュートリガーで実装しており、キューからメッセージを受信し順次タスクを実行します。本サンプルではタスクの実行の代わりにち任意の秒数スリープして終了します。
 
 ## 実行方法
 
@@ -30,7 +31,7 @@ Azure Storage キューは、Azurite エミュレータを利用しており、�
 1. 手動による実行
 2. Docker Compose による実行
 
-前者は、お使いの環境に Storage エミュレータや Azure Functions Core ツールのインストールが必要で、1つ1つ個別にアプリケーションを起動していきます。後者は、Docker がインストールされている環境向けです。個々のアプリケーションはDocker上で実行されるので、個別にストレージエミュレータ等のインストールは不要で、 `docker-compose` コマンドで全てを起動できます。
+前者は、お使いの環境に Storage エミュレータや Azure Functions Core ツールのインストールが必要で、1つ1つ個別にアプリケーションを起動していきます。後者は、Docker がインストールされている環境向けです。個々のアプリケーションはDocker上で実行されるので、個別に Storage エミュレータ等のインストールは不要で、 `docker-compose` コマンドで全てを起動できます。
 
 ### 手動による実行方法
 
@@ -45,6 +46,7 @@ Azure Storage キューは、Azurite エミュレータを利用しており、�
 以下は、Azurite エミュレータの起動例です。
 
 ```sh
+$ mkdir ~/azurite
 $ azurite --location ~/azurite/
 Azurite Blob service is starting at http://127.0.0.1:10000
 Azurite Blob service is successfully listening at http://127.0.0.1:10000
@@ -52,10 +54,9 @@ Azurite Queue service is starting at http://127.0.0.1:10001
 Azurite Queue service is successfully listening at http://127.0.0.1:10001
 Azurite Table service is starting at http://127.0.0.1:10002
 Azurite Table service is successfully listening at http://127.0.0.1:10002
-
 ```
 
-#### プロデューサーアプリの起動
+#### プロデューサー Web アプリケーションの起動
 
 Spring Boot Web アプリケーションです。以下のコマンドでビルド、実行します。
 
@@ -270,7 +271,5 @@ curl http://localhost:10080/test/10
 
 * [Azure Functions における Azure Queue storage のトリガーとバインドの概要 | Microsoft Docs](https://docs.microsoft.com/ja-jp/azure/azure-functions/functions-bindings-storage-queue#hostjson-settings)
 
-## 参考リンク
+以上
 
-* [開発とテストに Azure ストレージ エミュレーターを使用する (非推奨) | Microsoft Docs](https://docs.microsoft.com/ja-jp/azure/storage/common/storage-use-emulator)
-* [ローカルでの Azure Storage の開発に Azurite エミュレーターを使用する | Microsoft Docs](https://docs.microsoft.com/ja-jp/azure/storage/common/storage-use-azurite?tabs=npm)

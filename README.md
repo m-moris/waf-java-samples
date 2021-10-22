@@ -8,6 +8,7 @@ Microsoft Azure Well-Architected Framework に基づくクラウドデザイン�
 | [circuitbreaker](./circuitbreaker/README.md) |  サーキットブレーカー パターン |
 | [health-endpoint-monitoring](./health-endpoint-monitoring/README.md) | 正常性エンドポイントの監視パターン |
 | [queue-base-load-leveling](./queue-base-load-leveling/README.md) | キュー ベースの負荷平準化パターン |
+| [asynchronous-request-reply](./asynchronous-request-reply/README.md) | 非同期応答パターン |
 
 ## 前提条件
 
@@ -18,7 +19,8 @@ Microsoft Azure Well-Architected Framework に基づくクラウドデザイン�
 - curl コマンド（一部サンプル）
 - [Azure Storge エミュレータ](https://docs.microsoft.com/ja-jp/azure/storage/common/storage-use-emulator) または [Azurite エミュレータ](https://docs.microsoft.com/ja-jp/azure/storage/common/storage-use-azurite?tabs=npm) （一部サンプル）
 - [Azure Functions Core ツール](https://docs.microsoft.com/ja-jp/azure/azure-functions/functions-run-local)（一部サンプル）
-
+- Docker / Docker Compose （一部サンプル、なくても実行はできますが環境構築が簡単になります）
+ 
 ## 利用する外部サービス
 
 任意のステータスコードを返す Web サービスを、「外部サービス」として見立てて利用しているサンプルがあります。この Web サービスでは、リクエストに応じたHTTP ステータスコードを返却したり、遅延したレスポンスを返却することができます。
@@ -27,13 +29,14 @@ Microsoft Azure Well-Architected Framework に基づくクラウドデザイン�
 
 ## サンプル動作確認環境
 
-本サンプルは以下の環境で確認しました。
+本サンプルは以下の環境で動作確認しました。
 
 - Windows 10 WSL2 環境上の Ubuntu20.04
 - OpenJDK Runtime Environment Microsoft-25199 (build 11.0.12+7)
 - Apache Maven 3.8.3
 - Eclipse IDE for Java Developers (2021-3)
 - Visual Studio Code 1.61.0 
+- Docker Desktop fo Windows v20.10.8
 
 ## 利用条件
 
