@@ -222,8 +222,6 @@ resilience4j.circuitbreaker:
 
 本サンプルでは、内部の状態を確認できないので、挙動から判断しています。
 
-
-
 ## 参考リンク
 
 * [CircuitBreaker](https://resilience4j.readme.io/docs/circuitbreaker)

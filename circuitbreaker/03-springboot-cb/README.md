@@ -92,7 +92,7 @@ mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=8888
 
 ## アプリケーションへの操作
 
-`test.sh` を実行します。アプリケーションの動作を分りやすくするために、`org.springframework.retry` のデバッグレベルを `TRACE`にしてあります。
+`test1.sh` を実行します。アプリケーションの動作を分りやすくするために、`org.springframework.retry` のデバッグレベルを `TRACE`にしてあります。
 
 初期状態（CLOSED）-> OPEN へ遷移する例です。設定通り5秒以内に3回以上失敗すると、 OPEN への遷移します。3回目の呼び出しログで、最終的に `Opening circuit` と出力されるのが確認できます。それ移行の呼び出しは、サーキットブレーカーによってブロックされます。
 
