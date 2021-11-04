@@ -43,7 +43,7 @@ public class RetrySample {
                     return true;
                 }
                 // リトライすべきステータスコードかチェック
-                if ((code == 500 || code == 503 || code == 429) == false) {
+                if (code != 500 && code != 503 && code != 429) {
                     return false;
                 }
 
